@@ -1,17 +1,21 @@
+// src/commands/getredeye.js
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('getredeye')
-    .setDescription('🎥 Verify your YouTube channel to receive updates.')
-    .setDMPermission(false), // Server-only
+    .setDescription('Verify as a YouTube content creator'),
 
   async execute(interaction) {
     const embed = new EmbedBuilder()
-      .setTitle('🎥 YouTube Creator Verification')
-      .setDescription('Please follow the steps below to verify your YouTube channel.\n\n🔹 Minimum 10 subscribers required.\n🔹 The bot will start tracking your uploads after verification.')
-      .setColor(0xff0000)
-      .setFooter({ text: 'RedEye Bot - YouTube Utility' });
+      .setTitle('🎥 YouTube Verification')
+      .setDescription(
+        `To verify your YouTube account, please provide details via the buttons or form below.\n\n` +
+        `✅ Minimum 10 subscribers required.\n🔒 This process is private and only visible to you.`
+      )
+      .setColor('Red')
+      .setFooter({ text: 'RedEye Bot — Content Creator Verification' })
+      .setTimestamp();
 
     await interaction.reply({
       embeds: [embed],
