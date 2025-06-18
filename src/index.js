@@ -3,37 +3,51 @@ import { Client, GatewayIntentBits, Partials, Collection, Events } from 'discord
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
 dotenv.config();
 
-// Create a new client instance
+// Fix for __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Create a new Discord client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
   partials: [Partials.Channel],
 });
 
+// Command collection
 client.commands = new Collection();
 
-// Load commands from src/commands
+// Load commands from /commands folder
 const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
   for (const file of commandFiles) {
-    const command = await import(`./commands/${file}`);
-    if (command.default?.data && command.default?.execute) {
-      client.commands.set(command.default.data.name, command.default);
+    const commandModule = await import(`./commands/${file}`);
+    const command = commandModule.default;
+    if (command?.data && command?.execute) {
+      client.commands.set(command.data.name, command);
     }
   }
 } else {
-  console.error('❌ No commands folder found. Make sure src/commands exists.');
+  console.warn('⚠️ No /commands directory found.');
 }
 
-// Load server-specific settings
+// Load server settings from file
 const settingsPath = path.join(process.cwd(), 'serversettings.json');
-let serverSettings = fs.existsSync(settingsPath)
-  ? JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
-  : {};
+let serverSettings = {};
+if (fs.existsSync(settingsPath)) {
+  try {
+    serverSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+  } catch (err) {
+    console.error('❌ Failed to read serversettings.json:', err);
+  }
+}
 
-// Handle slash commands
+// Slash command interaction
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
   const command = client.commands.get(interaction.commandName);
@@ -41,25 +55,50 @@ client.on(Events.InteractionCreate, async interaction => {
   try {
     await command.execute(interaction, serverSettings);
   } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: '❌ Something went wrong!', ephemeral: true });
+    console.error(`❌ Error executing ${interaction.commandName}:`, error);
+    await interaction.reply({ content: 'Something went wrong while executing this command.', ephemeral: true });
   }
 });
 
-// On bot added to a new server
+// Handle /here and /dontmore in messages
+client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+  const { commandName, channel, guildId, user } = interaction;
+
+  if (commandName === 'here') {
+    serverSettings[guildId] = { channelId: channel.id };
+    await interaction.reply({ content: `✅ This channel is now set for YouTube updates.`, ephemeral: true });
+  }
+
+  if (commandName === 'dontmore') {
+    delete serverSettings[guildId];
+    await interaction.reply({ content: `🚫 Channel updates stopped for this server.`, ephemeral: true });
+  }
+});
+
+// DM when added to a server
 client.on(Events.GuildCreate, async guild => {
   const owner = await guild.fetchOwner().catch(() => null);
   if (owner) {
-    owner.send({
-      content: `👁️‍🗨️ Thanks for adding RedEye!\n\n⚠️ The bot can send messages anywhere. To set up your YouTube content updates, use:\n\n➡️ /here – to choose a channel\n❌ /dontmore – to disable\n\nUse /getredeye to verify YouTube accounts!`,
-    }).catch(() => console.log('DM failed'));
+    try {
+      await owner.send(
+        `👋 Thanks for adding RedEye bot!\n\n⚠️ By default, the bot can message anywhere in the server.\nTo set a channel:\n→ Use /here in your chosen channel\n→ To stop updates, use /dontmore\n\nUse /getredeye to start YouTube creator verification.`
+      );
+    } catch (err) {
+      console.warn(`⚠️ Could not DM owner of ${guild.name}`);
+    }
   }
 });
 
-// Save settings on exit
-process.on('exit', () => {
+// Save settings before exit
+process.on('SIGINT', () => {
   fs.writeFileSync(settingsPath, JSON.stringify(serverSettings, null, 2));
+  process.exit();
+});
+process.on('SIGTERM', () => {
+  fs.writeFileSync(settingsPath, JSON.stringify(serverSettings, null, 2));
+  process.exit();
 });
 
-// Login
+// Start bot
 client.login(process.env.DISCORD_TOKEN);
