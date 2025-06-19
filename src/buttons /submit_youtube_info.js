@@ -34,4 +34,4 @@ export default {
 
     await interaction.showModal(modal);
   }
-};
+}
