@@ -1,10 +1,5 @@
-// src/index.js
-import {
-  Client,
-  GatewayIntentBits,
-  Collection,
-  Events
-} from 'discord.js';
+import express from 'express';
+import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
 import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 config();
 
+// For __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,8 +17,9 @@ const client = new Client({
 
 client.commands = new Collection();
 client.buttons = new Collection();
+client.modals = new Collection();
 
-// Load slash command files
+// Load command files
 const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -42,11 +39,10 @@ if (fs.existsSync(commandsPath)) {
   console.warn('⚠️ No /commands directory found.');
 }
 
-// Load button interaction handlers
+// Load button interaction files
 const buttonsPath = path.join(__dirname, 'buttons');
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
-
   for (const file of buttonFiles) {
     const filePath = path.join(buttonsPath, file);
     const button = await import(`file://${filePath}`);
@@ -54,13 +50,10 @@ if (fs.existsSync(buttonsPath)) {
       client.buttons.set(button.default.customId, button.default);
     }
   }
-} else {
-  console.warn('⚠️ No /buttons directory found.');
 }
 
 // Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
-  // Slash command
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
@@ -74,47 +67,33 @@ client.on(Events.InteractionCreate, async interaction => {
         ephemeral: true
       });
     }
-  }
-
-  // Button interaction
-  else if (interaction.isButton()) {
-    const handler = client.buttons.get(interaction.customId);
-    if (!handler) return;
+  } else if (interaction.isButton()) {
+    const button = client.buttons.get(interaction.customId);
+    if (!button) return;
 
     try {
-      await handler.execute(interaction);
+      await button.execute(interaction);
     } catch (error) {
       console.error(error);
-      await interaction.reply({
-        content: 'There was an error handling this button!',
-        ephemeral: true
-      });
     }
-  }
-
-  // Modal submission (handled separately if needed)
-  else if (interaction.isModalSubmit()) {
-    const handler = client.buttons.get(interaction.customId);
-    if (!handler) return;
+  } else if (interaction.isModalSubmit()) {
+    const modal = client.buttons.get(interaction.customId);
+    if (!modal) return;
 
     try {
-      await handler.execute(interaction);
+      await modal.execute(interaction);
     } catch (error) {
       console.error(error);
-      await interaction.reply({
-        content: 'There was an error submitting your form!',
-        ephemeral: true
-      });
     }
   }
 });
 
-// Welcome DM on bot add
+// Send DM to user who added the bot
 client.on(Events.GuildCreate, async guild => {
   try {
     const owner = await guild.fetchOwner();
     owner.send(
-      `👋 Thanks for adding RedEye bot!\n\n⚠️ This bot can message in any channel. Run \`/here\` to set a working channel, or \`/dontmore\` to stop updates.\n\nUse \`/getredeye\` to verify yourself as a YouTube content creator.`
+      `👋 Thanks for adding RedEye bot!\n\n⚠️ Warning: This bot can message in any channel. Please run the command \`/here\` to set a working channel, or \`/dontmore\` to stop updates.\n\nUse \`/getredeye\` to verify yourself as a YouTube content creator.`
     );
   } catch (error) {
     console.error('Could not send DM to the server owner:', error);
@@ -125,4 +104,16 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN)
+client.login(process.env.DISCORD_TOKEN);
+
+// Dummy express server for Render
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('RedEye bot is running!');
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Express server running on port ${PORT}`);
+})
