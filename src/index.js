@@ -1,172 +1,88 @@
-// src/index.js
-import {
-  Client,
-  GatewayIntentBits,
-  Collection,
-  Events,
-  Partials,
-  REST,
-  Routes
-} from 'discord.js';
+import 'dotenv/config';
+import { Client, Collection, GatewayIntentBits, REST, Routes } from 'discord.js';
 import express from 'express';
-import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 
-config();
-
+// Path helpers
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use process.cwd() to get absolute path from project root (important for Render)
-const commandsPath = path.join(process.cwd(), 'src', 'commands');
-const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
-const modalsPath = path.join(process.cwd(), 'src', 'modals');
-
+// Create bot client
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
-  partials: [Partials.Channel]
+  intents: [GatewayIntentBits.Guilds],
 });
-
 client.commands = new Collection();
-client.buttons = new Collection();
-client.modals = new Collection();
 
-// Load command files
-const commandFiles = fs.existsSync(commandsPath)
-  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
-  : [];
+// Load commands
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
+const slashCommands = [];
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
-  const command = await import(`file://${filePath}`);
+  const command = await import(`./commands/${file}`);
+
   if (command.default?.data && command.default?.execute) {
     client.commands.set(command.default.data.name, command.default);
+    slashCommands.push(command.default.data.toJSON());
+    console.log(`✅ Loaded command: ${command.default.data.name}`);
+  } else {
+    console.log(`⚠️ Skipped invalid command file: ${file}`);
   }
 }
 
-// Auto-deploy slash commands globally
-const deployCommands = async () => {
-  const commands = [];
-
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = await import(`file://${filePath}`);
-    if (command.default?.data) {
-      commands.push(command.default.data.toJSON());
-    }
-  }
-
-  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-
+// Register slash commands
+async function deployCommands() {
   try {
-    if (commands.length === 0) {
-      console.warn('⚠️ No slash commands found to deploy.');
+    if (!slashCommands.length) {
+      console.log('⚠️ No slash commands found to deploy.');
       return;
     }
 
-    console.log(`🔍 Found ${commands.length} commands. Deploying...`);
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-      body: commands
+      body: slashCommands,
     });
-    console.log('✅ Slash commands deployed successfully.');
+
+    console.log('✅ Global slash commands deployed.');
   } catch (error) {
     console.error('❌ Failed to deploy commands:', error);
   }
-};
-
-await deployCommands();
-
-// Load button handlers
-if (fs.existsSync(buttonsPath)) {
-  const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
-  for (const file of buttonFiles) {
-    const filePath = path.join(buttonsPath, file);
-    const button = await import(`file://${filePath}`);
-    if (button.default?.customId && button.default?.execute) {
-      client.buttons.set(button.default.customId, button.default);
-    }
-  }
 }
 
-// Load modal handlers
-if (fs.existsSync(modalsPath)) {
-  const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
-  for (const file of modalFiles) {
-    const filePath = path.join(modalsPath, file);
-    const modal = await import(`file://${filePath}`);
-    if (modal.default?.customId && modal.default?.execute) {
-      client.modals.set(modal.default.customId, modal.default);
-    }
-  }
-}
+// Handle interaction
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isCommand()) return;
 
-// Handle interactions
-client.on(Events.InteractionCreate, async interaction => {
-  if (interaction.isChatInputCommand()) {
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
-    try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: 'There was an error executing that command!',
-        ephemeral: true
-      });
-    }
-  } else if (interaction.isButton()) {
-    const handler = client.buttons.get(interaction.customId);
-    if (handler) {
-      try {
-        await handler.execute(interaction);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  } else if (interaction.isModalSubmit()) {
-    const handler = client.modals.get(interaction.customId);
-    if (handler) {
-      try {
-        await handler.execute(interaction);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }
-});
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
 
-// DM server owner on invite
-client.on(Events.GuildCreate, async guild => {
   try {
-    const owner = await guild.fetchOwner();
-    owner.send(
-      `👋 Thanks for adding **RedEye** bot to your server!
-
-📌 Here's how to get started:
-
-1️⃣ Run the command \`/here\` in the channel where you want RedEye to post YouTube updates.
-
-2️⃣ Ask your members to use \`/getredeye\` to verify their YouTube channel (minimum 10 subscribers).
-
-📽️ Once verified, RedEye will automatically post their new uploads in the selected channel.
-
-Enjoy using RedEye! ❤️`
-    );
+    await command.execute(interaction);
   } catch (error) {
-    console.error('Could not DM server owner:', error);
+    console.error(`❌ Error in command ${interaction.commandName}:`, error);
+    await interaction.reply({
+      content: 'There was an error executing this command.',
+      ephemeral: true,
+    });
   }
 });
 
-client.once(Events.ClientReady, () => {
+// Start the bot
+client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN);
-
-// Dummy Express server to keep Render alive
+// Express server
 const app = express();
-const PORT = process.env.PORT || 3000;
-app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
+app.get('/', (_, res) => res.send('Bot is running'));
+app.listen(3000, () => {
+  console.log('🌐 Express listening on port 3000');
+});
+
+// Launch
+await deployCommands();
+client.login(process.env.DISCORD_TOKEN);
