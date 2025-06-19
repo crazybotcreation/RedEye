@@ -4,7 +4,9 @@ import {
   GatewayIntentBits,
   Collection,
   Events,
-  Partials
+  Partials,
+  REST,
+  Routes
 } from 'discord.js';
 import express from 'express';
 import { config } from 'dotenv';
@@ -28,16 +30,45 @@ client.modals = new Collection();
 
 // Load command files
 const commandsPath = path.join(__dirname, 'commands');
-if (fs.existsSync(commandsPath)) {
-  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+const commandFiles = fs.existsSync(commandsPath)
+  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
+  : [];
+
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = await import(`file://${filePath}`);
+  if (command.default?.data && command.default?.execute) {
+    client.commands.set(command.default.data.name, command.default);
+  }
+}
+
+// Auto-deploy slash commands globally
+const deployCommands = async () => {
+  const commands = [];
+
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = await import(`file://${filePath}`);
-    if (command.default?.data && command.default?.execute) {
-      client.commands.set(command.default.data.name, command.default);
+    if (command.default?.data) {
+      commands.push(command.default.data.toJSON());
     }
   }
-}
+
+  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+
+  try {
+    console.log('🚀 Deploying slash commands (auto)...');
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
+    console.log('✅ Slash commands deployed successfully.');
+  } catch (error) {
+    console.error('❌ Failed to deploy commands:', error);
+  }
+};
+
+await deployCommands();
 
 // Load button handlers
 const buttonsPath = path.join(__dirname, 'buttons');
@@ -118,7 +149,7 @@ client.once(Events.ClientReady, () => {
 
 client.login(process.env.DISCORD_TOKEN);
 
-// 👇 Dummy Express server to keep Render alive
+// Dummy Express server to keep Render alive
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
