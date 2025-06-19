@@ -10,35 +10,27 @@ export default {
   customId: 'submit_youtube_info',
   async execute(interaction) {
     const modal = new ModalBuilder()
-      .setCustomId('redeye_youtube_modal')
-      .setTitle('YouTube Channel Verification');
+      .setCustomId('redeye_modal')
+      .setTitle('🔍 YouTube Channel Verification');
 
-    const channelUrlInput = new TextInputBuilder()
-      .setCustomId('channel_url')
-      .setLabel('🔗 YouTube Channel URL')
+    const channelNameInput = new TextInputBuilder()
+      .setCustomId('channel_name')
+      .setLabel('Your YouTube Channel Name')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('e.g., Crazy Gamer')
+      .setRequired(true);
+
+    const channelLinkInput = new TextInputBuilder()
+      .setCustomId('channel_link')
+      .setLabel('YouTube Channel Link')
       .setStyle(TextInputStyle.Short)
       .setPlaceholder('https://youtube.com/channel/...')
       .setRequired(true);
 
-    const subscriberCountInput = new TextInputBuilder()
-      .setCustomId('subscriber_count')
-      .setLabel('👥 Subscriber Count')
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder('Enter your current subscriber count')
-      .setRequired(true);
+    const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
+    const secondRow = new ActionRowBuilder().addComponents(channelLinkInput);
 
-    const noteInput = new TextInputBuilder()
-      .setCustomId('note')
-      .setLabel('📝 Notes (Optional)')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell us anything else...')
-      .setRequired(false);
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(channelUrlInput),
-      new ActionRowBuilder().addComponents(subscriberCountInput),
-      new ActionRowBuilder().addComponents(noteInput)
-    );
+    modal.addComponents(firstRow, secondRow);
 
     await interaction.showModal(modal);
   }
