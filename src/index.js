@@ -19,10 +19,10 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Corrected paths using __dirname (important fix)
-const commandsPath = path.join(__dirname, 'commands');
-const buttonsPath = path.join(__dirname, 'buttons');
-const modalsPath = path.join(__dirname, 'modals');
+// ✅ FIXED PATH: root/commands instead of root/src/commands
+const commandsPath = path.join(process.cwd(), 'commands');
+const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
+const modalsPath = path.join(process.cwd(), 'src', 'modals');
 
 console.log('📂 Looking for commands in:', commandsPath);
 
