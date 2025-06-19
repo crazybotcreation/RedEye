@@ -3,7 +3,7 @@ import {
   GatewayIntentBits,
   Collection,
   Events,
-  InteractionType
+  Partials
 } from 'discord.js';
 import { config } from 'dotenv';
 import fs from 'node:fs';
@@ -17,16 +17,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  partials: [Partials.Channel]
 });
 
 client.commands = new Collection();
 client.buttons = new Collection();
 
-// Load command files
+// Load commands
 const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
-  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+  const commandFiles = fs
+    .readdirSync(commandsPath)
+    .filter(file => file.endsWith('.js'));
 
   if (commandFiles.length === 0) {
     console.warn('⚠️ /commands directory is empty.');
@@ -43,10 +46,12 @@ if (fs.existsSync(commandsPath)) {
   console.warn('⚠️ No /commands directory found.');
 }
 
-// Load button handlers
+// Load button interaction handlers
 const buttonsPath = path.join(__dirname, 'buttons');
 if (fs.existsSync(buttonsPath)) {
-  const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
+  const buttonFiles = fs
+    .readdirSync(buttonsPath)
+    .filter(file => file.endsWith('.js'));
 
   for (const file of buttonFiles) {
     const filePath = path.join(buttonsPath, file);
@@ -59,7 +64,7 @@ if (fs.existsSync(buttonsPath)) {
 
 // Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
-  if (interaction.type === InteractionType.ApplicationCommand) {
+  if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
@@ -72,7 +77,9 @@ client.on(Events.InteractionCreate, async interaction => {
         ephemeral: true
       });
     }
-  } else if (interaction.isButton()) {
+  }
+
+  else if (interaction.isButton()) {
     const button = client.buttons.get(interaction.customId);
     if (!button) return;
 
@@ -84,6 +91,20 @@ client.on(Events.InteractionCreate, async interaction => {
         content: 'There was an error handling this button!',
         ephemeral: true
       });
+    }
+  }
+
+  else if (interaction.isModalSubmit()) {
+    if (interaction.customId === 'redeye_youtube_modal') {
+      const ytLink = interaction.fields.getTextInputValue('yt_link');
+      const ytName = interaction.fields.getTextInputValue('yt_name');
+
+      await interaction.reply({
+        content: `✅ Thanks! You've submitted:\n**Channel Name:** ${ytName}\n**Channel URL:** ${ytLink}`,
+        ephemeral: true
+      });
+
+      // You can store to file or DB here
     }
   }
 });
@@ -104,4 +125,4 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN)
+client.login(process.env.DISCORD_TOKEN);
