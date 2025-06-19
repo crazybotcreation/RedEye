@@ -1,104 +1,69 @@
-// src/index.js
-import { Client, GatewayIntentBits, Partials, Collection, Events } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
+import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
+import { config } from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
-dotenv.config();
+config();
 
-// Fix for __dirname in ES modules
+// For __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
-// Create a new Discord client
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
-  partials: [Partials.Channel],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
 
-// Command collection
 client.commands = new Collection();
 
-// Load commands from /commands folder
+// Load command files
 const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
   for (const file of commandFiles) {
-    const commandModule = await import(`./commands/${file}`);
-    const command = commandModule.default;
-    if (command?.data && command?.execute) {
-      client.commands.set(command.data.name, command);
+    const filePath = path.join(commandsPath, file);
+    const command = await import(`file://${filePath}`);
+    if (command.default?.data && command.default?.execute) {
+      client.commands.set(command.default.data.name, command.default);
     }
   }
 } else {
   console.warn('⚠️ No /commands directory found.');
 }
 
-// Load server settings from file
-const settingsPath = path.join(process.cwd(), 'serversettings.json');
-let serverSettings = {};
-if (fs.existsSync(settingsPath)) {
-  try {
-    serverSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-  } catch (err) {
-    console.error('❌ Failed to read serversettings.json:', err);
-  }
-}
-
-// Slash command interaction
+// Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
+
   const command = client.commands.get(interaction.commandName);
   if (!command) return;
+
   try {
-    await command.execute(interaction, serverSettings);
+    await command.execute(interaction);
   } catch (error) {
-    console.error(`❌ Error executing ${interaction.commandName}:`, error);
-    await interaction.reply({ content: 'Something went wrong while executing this command.', ephemeral: true });
+    console.error(error);
+    await interaction.reply({
+      content: 'There was an error executing that command!',
+      ephemeral: true
+    });
   }
 });
 
-// Handle /here and /dontmore in messages
-client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  const { commandName, channel, guildId, user } = interaction;
-
-  if (commandName === 'here') {
-    serverSettings[guildId] = { channelId: channel.id };
-    await interaction.reply({ content: `✅ This channel is now set for YouTube updates.`, ephemeral: true });
-  }
-
-  if (commandName === 'dontmore') {
-    delete serverSettings[guildId];
-    await interaction.reply({ content: `🚫 Channel updates stopped for this server.`, ephemeral: true });
-  }
-});
-
-// DM when added to a server
+// Send DM to user who added the bot
 client.on(Events.GuildCreate, async guild => {
-  const owner = await guild.fetchOwner().catch(() => null);
-  if (owner) {
-    try {
-      await owner.send(
-        `👋 Thanks for adding RedEye bot!\n\n⚠️ By default, the bot can message anywhere in the server.\nTo set a channel:\n→ Use /here in your chosen channel\n→ To stop updates, use /dontmore\n\nUse /getredeye to start YouTube creator verification.`
-      );
-    } catch (err) {
-      console.warn(`⚠️ Could not DM owner of ${guild.name}`);
-    }
+  try {
+    const owner = await guild.fetchOwner();
+    owner.send(
+      `👋 Thanks for adding RedEye bot!\n\n⚠️ Warning: This bot can message in any channel. Please run the command \`/here\` to set a working channel, or \`/dontmore\` to stop updates.\n\nUse \`/getredeye\` to verify yourself as a YouTube content creator.`
+    );
+  } catch (error) {
+    console.error('Could not send DM to the server owner:', error);
   }
 });
 
-// Save settings before exit
-process.on('SIGINT', () => {
-  fs.writeFileSync(settingsPath, JSON.stringify(serverSettings, null, 2));
-  process.exit();
-});
-process.on('SIGTERM', () => {
-  fs.writeFileSync(settingsPath, JSON.stringify(serverSettings, null, 2));
-  process.exit();
+client.once(Events.ClientReady, () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-// Start bot
 client.login(process.env.DISCORD_TOKEN);
