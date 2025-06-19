@@ -136,7 +136,17 @@ client.on(Events.GuildCreate, async guild => {
   try {
     const owner = await guild.fetchOwner();
     owner.send(
-      `👋 Thanks for adding RedEye bot!\n\n⚠️ Please run the command \`/here\` to set a working channel.\n\nUse \`/getredeye\` to verify your YouTube channel.`
+      `👋 Thanks for adding **RedEye** bot to your server!
+
+📌 Here's how to get started:
+
+1️⃣ Run the command \`/here\` in the channel where you want RedEye to post YouTube updates.
+
+2️⃣ Ask your members to use \`/getredeye\` to verify their YouTube channel (minimum 10 subscribers).
+
+📽️ Once verified, RedEye will automatically post their new uploads in the selected channel.
+
+Enjoy using RedEye! ❤️`
     );
   } catch (error) {
     console.error('Could not DM server owner:', error);
@@ -153,4 +163,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
