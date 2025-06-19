@@ -21,11 +21,15 @@ const commandsPath = path.join(__dirname, 'commands');
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = await import(`file://${filePath}`);
-    if (command.default?.data && command.default?.execute) {
-      client.commands.set(command.default.data.name, command.default);
+  if (commandFiles.length === 0) {
+    console.warn('⚠️ /commands directory is empty.');
+  } else {
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      const command = await import(`file://${filePath}`);
+      if (command.default?.data && command.default?.execute) {
+        client.commands.set(command.default.data.name, command.default);
+      }
     }
   }
 } else {
@@ -66,4 +70,4 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN)
