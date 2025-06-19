@@ -19,10 +19,10 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use process.cwd() to get absolute path from project root (important for Render)
-const commandsPath = path.join(process.cwd(), 'src', 'commands');
-const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
-const modalsPath = path.join(process.cwd(), 'src', 'modals');
+// Correct path resolution from src/ directory
+const commandsPath = path.join(__dirname, 'commands');
+const buttonsPath = path.join(__dirname, 'buttons');
+const modalsPath = path.join(__dirname, 'modals');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -169,4 +169,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
