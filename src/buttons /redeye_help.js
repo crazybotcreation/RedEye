@@ -3,22 +3,23 @@ import { EmbedBuilder } from 'discord.js';
 
 export default {
   customId: 'redeye_help',
+
   async execute(interaction) {
-    const embed = new EmbedBuilder()
-      .setTitle('❓ RedEye Help')
+    const helpEmbed = new EmbedBuilder()
+      .setTitle('❓ Help: YouTube Verification')
       .setDescription(
-        `**Need help verifying your YouTube account?**\n\n` +
-        `• Click the **Submit Channel Info** button to enter your channel name and link.\n` +
-        `• Make sure your channel has **at least 10 subscribers**.\n` +
-        `• Once submitted, you'll receive confirmation if eligible.\n\n` +
-        `Feel free to ask support if you're stuck!`
+        `If you're a YouTube content creator and want your latest videos posted in this server:\n\n` +
+        `1. Click **"📥 Submit Channel Info"** to send your channel link and name.\n` +
+        `2. Make sure your channel has **at least 10 subscribers**.\n` +
+        `3. Once verified, your uploads will appear in the selected update channel (use \`/here\`).\n\n` +
+        `For questions or issues, contact the bot admin.`
       )
-      .setColor('Red')
-      .setFooter({ text: 'RedEye Bot — Help Menu' })
+      .setColor('Blue')
+      .setFooter({ text: 'RedEye Bot — Verification Help' })
       .setTimestamp();
 
     await interaction.reply({
-      embeds: [embed],
+      embeds: [helpEmbed],
       ephemeral: true
     });
   }
