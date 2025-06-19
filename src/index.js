@@ -15,6 +15,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+client.buttons = new Collection(); // 👈 add support for buttons
 
 // Load command files
 const commandsPath = path.join(__dirname, 'commands');
@@ -36,21 +37,51 @@ if (fs.existsSync(commandsPath)) {
   console.warn('⚠️ No /commands directory found.');
 }
 
+// Load button handlers
+const buttonsPath = path.join(__dirname, 'buttons');
+if (fs.existsSync(buttonsPath)) {
+  const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
+
+  if (buttonFiles.length === 0) {
+    console.warn('⚠️ /buttons directory is empty.');
+  } else {
+    for (const file of buttonFiles) {
+      const filePath = path.join(buttonsPath, file);
+      const button = await import(`file://${filePath}`);
+      if (button.default?.customId && button.default?.execute) {
+        client.buttons.set(button.default.customId, button.default);
+      }
+    }
+  }
+}
+
 // Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
-
   try {
-    await command.execute(interaction);
+    // Slash commands
+    if (interaction.isChatInputCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (command) {
+        await command.execute(interaction);
+      }
+    }
+
+    // Button interactions
+    if (interaction.isButton()) {
+      const button = client.buttons.get(interaction.customId);
+      if (button) {
+        await button.execute(interaction);
+      }
+    }
+
+    // Future: Handle modals here
   } catch (error) {
     console.error(error);
-    await interaction.reply({
-      content: 'There was an error executing that command!',
-      ephemeral: true
-    });
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({ content: 'There was an error.', ephemeral: true });
+    } else {
+      await interaction.reply({ content: 'There was an error.', ephemeral: true });
+    }
   }
 });
 
@@ -70,4 +101,4 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN)
+client.login(process.env.DISCORD_TOKEN);
