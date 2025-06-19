@@ -19,12 +19,10 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Correct paths from inside /src
-const commandsPath = path.join(__dirname, 'commands');
-const buttonsPath = path.join(__dirname, 'buttons');
-const modalsPath = path.join(__dirname, 'modals');
-
-console.log('🛠️ Looking for commands in:', commandsPath);
+// Use process.cwd() to get absolute path from project root (important for Render)
+const commandsPath = path.join(process.cwd(), 'src', 'commands');
+const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
+const modalsPath = path.join(process.cwd(), 'src', 'modals');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -42,9 +40,16 @@ const commandFiles = fs.existsSync(commandsPath)
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
-  const command = await import(`file://${filePath}`);
-  if (command.default?.data && command.default?.execute) {
-    client.commands.set(command.default.data.name, command.default);
+  try {
+    const command = await import(`file://${filePath}`);
+    if (command.default?.data && command.default?.execute) {
+      console.log(`✅ Loaded command: ${command.default.data.name}`);
+      client.commands.set(command.default.data.name, command.default);
+    } else {
+      console.warn(`⚠️ Skipped ${file} — missing data or execute`);
+    }
+  } catch (err) {
+    console.error(`❌ Failed to import ${file}:`, err);
   }
 }
 
@@ -54,9 +59,13 @@ const deployCommands = async () => {
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    const command = await import(`file://${filePath}`);
-    if (command.default?.data) {
-      commands.push(command.default.data.toJSON());
+    try {
+      const command = await import(`file://${filePath}`);
+      if (command.default?.data) {
+        commands.push(command.default.data.toJSON());
+      }
+    } catch (err) {
+      console.error(`❌ Failed to import command during deploy: ${file}`, err);
     }
   }
 
@@ -85,9 +94,13 @@ if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
   for (const file of buttonFiles) {
     const filePath = path.join(buttonsPath, file);
-    const button = await import(`file://${filePath}`);
-    if (button.default?.customId && button.default?.execute) {
-      client.buttons.set(button.default.customId, button.default);
+    try {
+      const button = await import(`file://${filePath}`);
+      if (button.default?.customId && button.default?.execute) {
+        client.buttons.set(button.default.customId, button.default);
+      }
+    } catch (err) {
+      console.error(`❌ Failed to import button ${file}:`, err);
     }
   }
 }
@@ -97,9 +110,13 @@ if (fs.existsSync(modalsPath)) {
   const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
   for (const file of modalFiles) {
     const filePath = path.join(modalsPath, file);
-    const modal = await import(`file://${filePath}`);
-    if (modal.default?.customId && modal.default?.execute) {
-      client.modals.set(modal.default.customId, modal.default);
+    try {
+      const modal = await import(`file://${filePath}`);
+      if (modal.default?.customId && modal.default?.execute) {
+        client.modals.set(modal.default.customId, modal.default);
+      }
+    } catch (err) {
+      console.error(`❌ Failed to import modal ${file}:`, err);
     }
   }
 }
