@@ -1,4 +1,3 @@
-// src/commands/getredeye.js
 import {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -23,20 +22,16 @@ export default {
       .setFooter({ text: 'RedEye Bot — Content Creator Verification' })
       .setTimestamp();
 
-    const buttons = new ActionRowBuilder().addComponents(
+    const button = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId('submit_youtube_info')
-        .setLabel('📥 Submit Channel Info')
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId('redeye_help')
-        .setLabel('❓ Help')
-        .setStyle(ButtonStyle.Secondary)
+        .setCustomId('open_youtube_verify_form')
+        .setLabel('Verify Now')
+        .setStyle(ButtonStyle.Primary)
     );
 
     await interaction.reply({
       embeds: [embed],
-      components: [buttons],
+      components: [button],
       ephemeral: true
     });
   }
