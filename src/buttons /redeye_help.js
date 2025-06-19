@@ -1,11 +1,25 @@
 // src/buttons/redeye_help.js
+import { EmbedBuilder } from 'discord.js';
+
 export default {
   customId: 'redeye_help',
   async execute(interaction) {
+    const embed = new EmbedBuilder()
+      .setTitle('❓ RedEye Help')
+      .setDescription(
+        `**Need help verifying your YouTube account?**\n\n` +
+        `• Click the **Submit Channel Info** button to enter your channel name and link.\n` +
+        `• Make sure your channel has **at least 10 subscribers**.\n` +
+        `• Once submitted, you'll receive confirmation if eligible.\n\n` +
+        `Feel free to ask support if you're stuck!`
+      )
+      .setColor('Red')
+      .setFooter({ text: 'RedEye Bot — Help Menu' })
+      .setTimestamp();
+
     await interaction.reply({
-      content:
-        'ℹ️ To verify your YouTube channel:\n\n1. Click **"Submit Channel Info"**.\n2. Enter your YouTube link and subscriber count.\n3. We’ll notify you if you’re verified!\n\nMinimum requirement: **10 subscribers**.\n\nThis process is private and secure.',
+      embeds: [embed],
       ephemeral: true
     });
   }
-}
+};
