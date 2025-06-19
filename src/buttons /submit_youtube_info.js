@@ -1,37 +1,37 @@
-// src/buttons/submit_youtube_info.js
 import {
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder
+  ActionRowBuilder,
+  TextInputStyle
 } from 'discord.js';
 
 export default {
   customId: 'submit_youtube_info',
+
   async execute(interaction) {
     const modal = new ModalBuilder()
-      .setCustomId('redeye_modal')
-      .setTitle('🔍 YouTube Channel Verification');
+      .setCustomId('redeye_youtube_modal')
+      .setTitle('🎥 Submit YouTube Channel');
 
-    const channelNameInput = new TextInputBuilder()
-      .setCustomId('channel_name')
-      .setLabel('Your YouTube Channel Name')
+    const channelLink = new TextInputBuilder()
+      .setCustomId('yt_link')
+      .setLabel('🔗 YouTube Channel URL')
+      .setPlaceholder('https://www.youtube.com/@yourchannel')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder('e.g., Crazy Gamer')
       .setRequired(true);
 
-    const channelLinkInput = new TextInputBuilder()
-      .setCustomId('channel_link')
-      .setLabel('YouTube Channel Link')
+    const channelName = new TextInputBuilder()
+      .setCustomId('yt_name')
+      .setLabel('📛 Channel Name')
+      .setPlaceholder('Example: CrazyBot Gaming')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder('https://youtube.com/channel/...')
       .setRequired(true);
 
-    const firstRow = new ActionRowBuilder().addComponents(channelNameInput);
-    const secondRow = new ActionRowBuilder().addComponents(channelLinkInput);
+    const row1 = new ActionRowBuilder().addComponents(channelLink);
+    const row2 = new ActionRowBuilder().addComponents(channelName);
 
-    modal.addComponents(firstRow, secondRow);
+    modal.addComponents(row1, row2);
 
     await interaction.showModal(modal);
   }
-}
+};
