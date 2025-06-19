@@ -30,9 +30,15 @@ client.modals = new Collection();
 
 // Load command files
 const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.existsSync(commandsPath)
-  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
-  : [];
+console.log('🔍 Looking for commands in:', commandsPath);
+
+let commandFiles = [];
+if (fs.existsSync(commandsPath)) {
+  commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+  console.log('📦 Found command files:', commandFiles);
+} else {
+  console.log('❌ Commands path does not exist.');
+}
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
@@ -48,33 +54,25 @@ const deployCommands = async () => {
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    try {
-      const command = await import(`file://${filePath}`);
-      if (command.default?.data) {
-        commands.push(command.default.data.toJSON());
-        console.log(`✅ Loaded command: ${command.default.data.name}`);
-      } else {
-        console.warn(`⚠️ Skipped ${file} — missing 'data' export.`);
-      }
-    } catch (err) {
-      console.error(`❌ Failed to load command from ${file}:`, err);
+    const command = await import(`file://${filePath}`);
+    if (command.default?.data) {
+      commands.push(command.default.data.toJSON());
     }
-  }
-
-  if (commands.length === 0) {
-    console.warn('⚠️ No slash commands found to deploy.');
-    return;
   }
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
   try {
-    console.log(`🚀 Deploying ${commands.length} global slash command(s)...`);
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-    console.log('✅ Global slash commands deployed successfully.');
+    if (commands.length === 0) {
+      console.warn('⚠️ No slash commands found to deploy.');
+    } else {
+      console.log('🚀 Deploying slash commands (auto)...');
+      await rest.put(
+        Routes.applicationCommands(process.env.CLIENT_ID),
+        { body: commands }
+      );
+      console.log('✅ Slash commands deployed successfully.');
+    }
   } catch (error) {
     console.error('❌ Failed to deploy commands:', error);
   }
