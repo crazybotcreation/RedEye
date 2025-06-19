@@ -1,5 +1,11 @@
-import express from 'express';
-import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
+// src/index.js
+import {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  Events,
+  Partials
+} from 'discord.js';
 import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,7 +18,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  partials: [Partials.Channel]
 });
 
 client.commands = new Collection();
@@ -39,7 +46,7 @@ if (fs.existsSync(commandsPath)) {
   console.warn('⚠️ No /commands directory found.');
 }
 
-// Load button interaction files
+// Load button handlers
 const buttonsPath = path.join(__dirname, 'buttons');
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
@@ -52,12 +59,24 @@ if (fs.existsSync(buttonsPath)) {
   }
 }
 
+// Load modal handlers
+const modalsPath = path.join(__dirname, 'modals');
+if (fs.existsSync(modalsPath)) {
+  const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
+  for (const file of modalFiles) {
+    const filePath = path.join(modalsPath, file);
+    const modal = await import(`file://${filePath}`);
+    if (modal.default?.customId && modal.default?.execute) {
+      client.modals.set(modal.default.customId, modal.default);
+    }
+  }
+}
+
 // Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
-
     try {
       await command.execute(interaction);
     } catch (error) {
@@ -68,22 +87,22 @@ client.on(Events.InteractionCreate, async interaction => {
       });
     }
   } else if (interaction.isButton()) {
-    const button = client.buttons.get(interaction.customId);
-    if (!button) return;
-
-    try {
-      await button.execute(interaction);
-    } catch (error) {
-      console.error(error);
+    const handler = client.buttons.get(interaction.customId);
+    if (handler) {
+      try {
+        await handler.execute(interaction);
+      } catch (error) {
+        console.error(error);
+      }
     }
   } else if (interaction.isModalSubmit()) {
-    const modal = client.buttons.get(interaction.customId);
-    if (!modal) return;
-
-    try {
-      await modal.execute(interaction);
-    } catch (error) {
-      console.error(error);
+    const handler = client.modals.get(interaction.customId);
+    if (handler) {
+      try {
+        await handler.execute(interaction);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 });
@@ -104,16 +123,4 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN);
-
-// Dummy express server for Render
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('RedEye bot is running!');
-});
-
-app.listen(PORT, () => {
-  console.log(`🌐 Express server running on port ${PORT}`);
-})
+client.login(process.env.DISCORD_TOKEN)
