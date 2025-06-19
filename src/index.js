@@ -33,10 +33,14 @@ client.commands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
 
-// Load command files
+// Log paths and loaded files
+console.log('📂 Looking for commands in:', commandsPath);
+
 const commandFiles = fs.existsSync(commandsPath)
   ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
   : [];
+
+console.log('📄 Found command files:', commandFiles);
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
@@ -188,4 +192,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
