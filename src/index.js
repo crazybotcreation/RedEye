@@ -19,10 +19,12 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Final fix: correct paths
+// ✅ Correct paths from inside /src
 const commandsPath = path.join(__dirname, 'commands');
 const buttonsPath = path.join(__dirname, 'buttons');
 const modalsPath = path.join(__dirname, 'modals');
+
+console.log('🛠️ Looking for commands in:', commandsPath);
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
