@@ -19,7 +19,7 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use process.cwd() to get absolute path from project root (important for Render)
+// 🧠 Correct for Render deployment (root = /opt/render/project/src)
 const commandsPath = path.join(process.cwd(), 'src', 'commands');
 const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
 const modalsPath = path.join(process.cwd(), 'src', 'modals');
@@ -35,7 +35,7 @@ client.commands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
 
-// Load command files
+// Load commands
 const commandFiles = fs.existsSync(commandsPath)
   ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
   : [];
@@ -57,7 +57,7 @@ for (const file of commandFiles) {
   }
 }
 
-// Auto-deploy slash commands globally
+// Deploy commands globally
 const deployCommands = async () => {
   const commands = [];
 
@@ -69,7 +69,7 @@ const deployCommands = async () => {
         commands.push(command.default.data.toJSON());
       }
     } catch (err) {
-      console.error(`❌ Failed to import command during deploy: ${file}`, err);
+      console.error(`❌ Failed to import during deploy: ${file}`, err);
     }
   }
 
@@ -93,7 +93,7 @@ const deployCommands = async () => {
 
 await deployCommands();
 
-// Load button handlers
+// Load buttons
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
   for (const file of buttonFiles) {
@@ -109,7 +109,7 @@ if (fs.existsSync(buttonsPath)) {
   }
 }
 
-// Load modal handlers
+// Load modals
 if (fs.existsSync(modalsPath)) {
   const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
   for (const file of modalFiles) {
@@ -160,7 +160,7 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
-// DM server owner on invite
+// DM server owner when bot added
 client.on(Events.GuildCreate, async guild => {
   try {
     const owner = await guild.fetchOwner();
@@ -188,8 +188,8 @@ client.once(Events.ClientReady, () => {
 
 client.login(process.env.DISCORD_TOKEN);
 
-// Dummy Express server to keep Render alive
+// Dummy Express server to stay awake on Render
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
