@@ -19,6 +19,11 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Use process.cwd() to get absolute path from project root (important for Render)
+const commandsPath = path.join(process.cwd(), 'src', 'commands');
+const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
+const modalsPath = path.join(process.cwd(), 'src', 'modals');
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
   partials: [Partials.Channel]
@@ -29,16 +34,9 @@ client.buttons = new Collection();
 client.modals = new Collection();
 
 // Load command files
-const commandsPath = path.join(__dirname, 'commands');
-console.log('🔍 Looking for commands in:', commandsPath);
-
-let commandFiles = [];
-if (fs.existsSync(commandsPath)) {
-  commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-  console.log('📦 Found command files:', commandFiles);
-} else {
-  console.log('❌ Commands path does not exist.');
-}
+const commandFiles = fs.existsSync(commandsPath)
+  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
+  : [];
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
@@ -65,14 +63,14 @@ const deployCommands = async () => {
   try {
     if (commands.length === 0) {
       console.warn('⚠️ No slash commands found to deploy.');
-    } else {
-      console.log('🚀 Deploying slash commands (auto)...');
-      await rest.put(
-        Routes.applicationCommands(process.env.CLIENT_ID),
-        { body: commands }
-      );
-      console.log('✅ Slash commands deployed successfully.');
+      return;
     }
+
+    console.log(`🔍 Found ${commands.length} commands. Deploying...`);
+    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
+      body: commands
+    });
+    console.log('✅ Slash commands deployed successfully.');
   } catch (error) {
     console.error('❌ Failed to deploy commands:', error);
   }
@@ -81,7 +79,6 @@ const deployCommands = async () => {
 await deployCommands();
 
 // Load button handlers
-const buttonsPath = path.join(__dirname, 'buttons');
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
   for (const file of buttonFiles) {
@@ -94,7 +91,6 @@ if (fs.existsSync(buttonsPath)) {
 }
 
 // Load modal handlers
-const modalsPath = path.join(__dirname, 'modals');
 if (fs.existsSync(modalsPath)) {
   const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
   for (const file of modalFiles) {
@@ -173,4 +169,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
