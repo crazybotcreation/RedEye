@@ -24,6 +24,8 @@ const commandsPath = path.join(process.cwd(), 'src', 'commands');
 const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
 const modalsPath = path.join(process.cwd(), 'src', 'modals');
 
+console.log('📂 Looking for commands in:', commandsPath);
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
   partials: [Partials.Channel]
@@ -33,9 +35,7 @@ client.commands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
 
-// Log paths and loaded files
-console.log('📂 Looking for commands in:', commandsPath);
-
+// Load command files
 const commandFiles = fs.existsSync(commandsPath)
   ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
   : [];
