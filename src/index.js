@@ -48,21 +48,33 @@ const deployCommands = async () => {
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    const command = await import(`file://${filePath}`);
-    if (command.default?.data) {
-      commands.push(command.default.data.toJSON());
+    try {
+      const command = await import(`file://${filePath}`);
+      if (command.default?.data) {
+        commands.push(command.default.data.toJSON());
+        console.log(`✅ Loaded command: ${command.default.data.name}`);
+      } else {
+        console.warn(`⚠️ Skipped ${file} — missing 'data' export.`);
+      }
+    } catch (err) {
+      console.error(`❌ Failed to load command from ${file}:`, err);
     }
+  }
+
+  if (commands.length === 0) {
+    console.warn('⚠️ No slash commands found to deploy.');
+    return;
   }
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
   try {
-    console.log('🚀 Deploying slash commands (auto)...');
+    console.log(`🚀 Deploying ${commands.length} global slash command(s)...`);
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands }
     );
-    console.log('✅ Slash commands deployed successfully.');
+    console.log('✅ Global slash commands deployed successfully.');
   } catch (error) {
     console.error('❌ Failed to deploy commands:', error);
   }
