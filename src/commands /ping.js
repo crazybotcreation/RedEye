@@ -1,4 +1,3 @@
-// src/commands/ping.js
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
