@@ -19,8 +19,8 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ FIXED: correct path to /commands folder at project root
-const commandsPath = path.join(__dirname, '..', 'commands');
+// ✅ FIXED: commands folder is inside src/
+const commandsPath = path.join(__dirname, 'commands');
 const buttonsPath = path.join(__dirname, 'buttons');
 const modalsPath = path.join(__dirname, 'modals');
 
@@ -187,7 +187,6 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-// Start bot
 client.login(process.env.DISCORD_TOKEN);
 
 // Dummy Express server to stay awake on Render
