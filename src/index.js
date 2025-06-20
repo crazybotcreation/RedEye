@@ -19,7 +19,7 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Correct folder paths
+// Folder paths
 const commandsPath = path.join(__dirname, 'commands');
 const buttonsPath = path.join(__dirname, 'buttons');
 const modalsPath = path.join(__dirname, 'modals');
@@ -32,7 +32,10 @@ console.log('📁 Buttons Path:', buttonsPath);
 console.log('📁 Modals Path:', modalsPath);
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers
+  ],
   partials: [Partials.Channel]
 });
 
@@ -74,11 +77,9 @@ const deployCommands = async () => {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const cmd = await import(`file://${filePath}`);
-    if (cmd.default?.data?.toJSON) {
+    if (cmd.default?.data) {
       commandsToDeploy.push(cmd.default.data.toJSON());
       console.log(`📤 Ready to deploy: /${cmd.default.data.name}`);
-    } else {
-      console.warn(`⚠️ Skipped deploy for ${file} (invalid or missing data.toJSON())`);
     }
   }
 
@@ -130,6 +131,29 @@ if (fs.existsSync(modalsPath)) {
   console.warn('⚠️ Modals path does NOT exist!');
 }
 
+// Send DM when bot is added to a server
+client.on(Events.GuildCreate, async (guild) => {
+  try {
+    const owner = await guild.fetchOwner();
+    await owner.send({
+      content: `👋 Hey **${owner.user.username}**, thanks for adding RedEye bot!
+
+📘 **What RedEye does**: 
+RedEye helps with YouTube verification, server interaction, and personalized bot responses.
+
+⚠️ **Important Warning**:
+By default, RedEye can send messages anywhere in your server. To control this:
+• Use \`/here\` to set the working channel.
+• Use \`/dontmore\` to stop the bot from messaging.
+
+Let me know if you need help anytime. 😎`
+    });
+    console.log(`📩 Sent DM to ${owner.user.tag} after joining ${guild.name}`);
+  } catch (err) {
+    console.warn(`❌ Could not send DM to server owner of ${guild.name}:`, err.message);
+  }
+});
+
 // Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
   try {
@@ -149,30 +173,6 @@ client.on(Events.InteractionCreate, async interaction => {
       content: 'Something went wrong!',
       ephemeral: true
     }).catch(() => {});
-  }
-});
-
-// DM server owner on invite
-client.on(Events.GuildCreate, async (guild) => {
-  try {
-    const owner = await guild.fetchOwner();
-
-    const message = `
-👋 **Thanks for adding RedEye to ${guild.name}!**
-
-🔧 Here's how to use me:
-• Use \`/here\` in a channel to set my working space.
-• Use \`/dontmore\` to stop me from messaging in your server.
-
-⚠️ **Warning**: By default, I may message anywhere in the server unless configured properly. Please use the above commands to manage this.
-
-Need help? Contact support or check the GitHub page: https://github.com/crazybotcreation/RedEye
-    `;
-
-    await owner.send({ content: message });
-    console.log(`✅ Sent welcome DM to owner of ${guild.name}`);
-  } catch (err) {
-    console.warn(`⚠️ Failed to send DM to owner of ${guild.name}:`, err.message);
   }
 });
 
