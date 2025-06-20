@@ -19,10 +19,10 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Correct paths (inside src folder)
-const commandsPath = path.join(__dirname, 'commands');
-const buttonsPath = path.join(__dirname, 'buttons');
-const modalsPath = path.join(__dirname, 'modals');
+// ✅ Correct: assumes __dirname = /opt/render/project/src
+const commandsPath = path.join(process.cwd(), 'src', 'commands');
+const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
+const modalsPath = path.join(process.cwd(), 'src', 'modals');
 
 console.log('🗂️ Initializing folders...');
 console.log('📁 Commands Path:', commandsPath);
