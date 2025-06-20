@@ -23,12 +23,12 @@ const commandsPath = path.join(process.cwd(), 'src', 'commands');
 const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
 const modalsPath = path.join(process.cwd(), 'src', 'modals');
 
-console.log('🗂️ Initializing folders...');
+console.log('🧠 God Mode Diagnostics Enabled');
+console.log('📂 Current working directory:', process.cwd());
+console.log('📂 __dirname:', __dirname);
 console.log('📁 Commands Path:', commandsPath);
 console.log('📁 Buttons Path:', buttonsPath);
 console.log('📁 Modals Path:', modalsPath);
-console.log('📂 Current working directory:', process.cwd());
-console.log('📂 __dirname:', __dirname);
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -39,154 +39,158 @@ client.commands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
 
-// Load commands
-if (!fs.existsSync(commandsPath)) {
-  console.warn('⚠️ Commands path does NOT exist!');
-} else {
-  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-  if (commandFiles.length === 0) {
-    console.warn('⚠️ No command files found.');
-  } else {
-    console.log('📄 Found command files:', commandFiles);
+// Helper for listing files
+function listFiles(folderPath, type) {
+  console.log(`🔍 Checking ${type} directory: ${folderPath}`);
+  if (!fs.existsSync(folderPath)) {
+    console.warn(`⚠️ ${type} path does NOT exist!`);
+    return [];
   }
+  const files = fs.readdirSync(folderPath);
+  console.log(`📦 ${type} contents:`, files);
+  const jsFiles = files.filter(file => file.endsWith('.js'));
+  console.log(`📄 ${type} .js files:`, jsFiles);
+  return jsFiles;
+}
+
+// Load commands
+const commandFiles = listFiles(commandsPath, 'Commands');
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  console.log(`📥 Importing command file: ${filePath}`);
+  try {
+    const command = await import(`file://${filePath}`);
+    if (command.default?.data && command.default?.execute) {
+      client.commands.set(command.default.data.name, command.default);
+      console.log(`✅ Loaded command: ${command.default.data.name}`);
+    } else {
+      console.warn(`⚠️ Command ${file} is missing "data" or "execute". Full content:`, command.default);
+    }
+  } catch (err) {
+    console.error(`❌ Failed to import command ${file}:`, err);
+  }
+}
+
+// Deploy commands globally
+const deployCommands = async () => {
+  const commands = [];
 
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
+    console.log(`📦 Preparing to deploy: ${filePath}`);
     try {
       const command = await import(`file://${filePath}`);
-      if (command.default?.data && command.default?.execute) {
-        client.commands.set(command.default.data.name, command.default);
-        console.log(`✅ Loaded command: ${command.default.data.name}`);
-      } else {
-        console.warn(`⚠️ Skipped ${file} — missing "data" or "execute".`);
+      if (command.default?.data) {
+        commands.push(command.default.data.toJSON());
+        console.log(`📤 Will deploy: /${command.default.data.name}`);
       }
     } catch (err) {
-      console.error(`❌ Failed to import command ${file}:`, err);
+      console.error(`❌ Failed to load for deploy: ${file}`, err);
     }
   }
 
-  // Deploy commands globally
-  const deployCommands = async () => {
-    const commands = [];
+  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
-    for (const file of commandFiles) {
-      const filePath = path.join(commandsPath, file);
-      try {
-        const command = await import(`file://${filePath}`);
-        if (command.default?.data) {
-          commands.push(command.default.data.toJSON());
-          console.log(`📤 Prepared to deploy: /${command.default.data.name}`);
-        }
-      } catch (err) {
-        console.error(`❌ Failed to import during deploy: ${file}`, err);
-      }
+  try {
+    if (commands.length === 0) {
+      console.warn('⚠️ No commands to deploy.');
+      return;
     }
 
-    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-
-    try {
-      if (commands.length === 0) {
-        console.warn('⚠️ No slash commands to deploy.');
-        return;
-      }
-
-      console.log(`🚀 Deploying ${commands.length} slash command(s) to Discord...`);
-      await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-        body: commands
-      });
-      console.log(`✅ Global commands deployed: [ ${commands.map(c => c.name).join(', ')} ]`);
-    } catch (error) {
-      console.error('❌ Failed to deploy commands:', error);
-    }
-  };
-
-  await deployCommands();
-}
+    console.log(`🚀 Deploying ${commands.length} command(s)...`);
+    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+    console.log(`✅ Deployed: [ ${commands.map(c => c.name).join(', ')} ]`);
+  } catch (error) {
+    console.error('❌ Command deploy failed:', error);
+  }
+};
+await deployCommands();
 
 // Load buttons
-if (!fs.existsSync(buttonsPath)) {
-  console.warn('⚠️ Buttons path does NOT exist!');
-} else {
-  const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
-  if (buttonFiles.length === 0) {
-    console.warn('⚠️ No button files found.');
-  }
-  for (const file of buttonFiles) {
-    const filePath = path.join(buttonsPath, file);
-    try {
-      const button = await import(`file://${filePath}`);
-      if (button.default?.customId && button.default?.execute) {
-        client.buttons.set(button.default.customId, button.default);
-        console.log(`✅ Loaded button: ${button.default.customId}`);
-      } else {
-        console.warn(`⚠️ Skipped button ${file}`);
-      }
-    } catch (err) {
-      console.error(`❌ Failed to import button ${file}:`, err);
+const buttonFiles = listFiles(buttonsPath, 'Buttons');
+for (const file of buttonFiles) {
+  const filePath = path.join(buttonsPath, file);
+  console.log(`📥 Importing button: ${filePath}`);
+  try {
+    const button = await import(`file://${filePath}`);
+    if (button.default?.customId && button.default?.execute) {
+      client.buttons.set(button.default.customId, button.default);
+      console.log(`✅ Loaded button: ${button.default.customId}`);
+    } else {
+      console.warn(`⚠️ Skipped ${file}, missing "customId" or "execute".`, button.default);
     }
+  } catch (err) {
+    console.error(`❌ Failed to import button ${file}:`, err);
   }
 }
 
 // Load modals
-if (!fs.existsSync(modalsPath)) {
-  console.warn('⚠️ Modals path does NOT exist!');
-} else {
-  const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
-  if (modalFiles.length === 0) {
-    console.warn('⚠️ No modal files found.');
-  }
-  for (const file of modalFiles) {
-    const filePath = path.join(modalsPath, file);
-    try {
-      const modal = await import(`file://${filePath}`);
-      if (modal.default?.customId && modal.default?.execute) {
-        client.modals.set(modal.default.customId, modal.default);
-        console.log(`✅ Loaded modal: ${modal.default.customId}`);
-      } else {
-        console.warn(`⚠️ Skipped modal ${file}`);
-      }
-    } catch (err) {
-      console.error(`❌ Failed to import modal ${file}:`, err);
+const modalFiles = listFiles(modalsPath, 'Modals');
+for (const file of modalFiles) {
+  const filePath = path.join(modalsPath, file);
+  console.log(`📥 Importing modal: ${filePath}`);
+  try {
+    const modal = await import(`file://${filePath}`);
+    if (modal.default?.customId && modal.default?.execute) {
+      client.modals.set(modal.default.customId, modal.default);
+      console.log(`✅ Loaded modal: ${modal.default.customId}`);
+    } else {
+      console.warn(`⚠️ Skipped ${file}, missing "customId" or "execute".`, modal.default);
     }
+  } catch (err) {
+    console.error(`❌ Failed to import modal ${file}:`, err);
   }
 }
 
-// Handle interactions
+// Handle all interactions
 client.on(Events.InteractionCreate, async interaction => {
+  console.log(`📩 Received interaction: ${interaction.type}`);
   try {
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
-      if (!command) return;
+      if (!command) {
+        console.warn(`⚠️ Unknown command: ${interaction.commandName}`);
+        return;
+      }
       await command.execute(interaction);
+      console.log(`✅ Executed command: ${interaction.commandName}`);
     } else if (interaction.isButton()) {
       const handler = client.buttons.get(interaction.customId);
-      if (handler) await handler.execute(interaction);
+      if (!handler) {
+        console.warn(`⚠️ No handler for button: ${interaction.customId}`);
+        return;
+      }
+      await handler.execute(interaction);
+      console.log(`✅ Executed button: ${interaction.customId}`);
     } else if (interaction.isModalSubmit()) {
       const handler = client.modals.get(interaction.customId);
-      if (handler) await handler.execute(interaction);
+      if (!handler) {
+        console.warn(`⚠️ No handler for modal: ${interaction.customId}`);
+        return;
+      }
+      await handler.execute(interaction);
+      console.log(`✅ Executed modal: ${interaction.customId}`);
     }
   } catch (error) {
-    console.error('❌ Interaction error:', error);
+    console.error('❌ Error handling interaction:', error);
     if (interaction.reply) {
-      await interaction.reply({ content: 'There was an error!', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: '❌ An error occurred!', ephemeral: true }).catch(() => {});
     }
   }
 });
 
-// DM server owner when bot added
+// Notify when bot joins new server
 client.on(Events.GuildCreate, async guild => {
+  console.log(`📥 Joined new guild: ${guild.name} (${guild.id})`);
   try {
     const owner = await guild.fetchOwner();
     await owner.send(
       `👋 Thanks for adding RedEye bot to your server!
 
-📌 Here's how to get started:
+📌 Get started:
 
-1️⃣ Run the command \`/here\` in the channel where you want RedEye to post YouTube updates.
-
-2️⃣ Ask your members to use \`/getredeye\` to verify their YouTube channel (minimum 10 subscribers).
-
-📽️ Once verified, RedEye will automatically post their new uploads in the selected channel.
+1️⃣ Use \`/here\` in the channel where RedEye should post YouTube updates.
+2️⃣ Members use \`/getredeye\` to verify their channel (min 10 subs).
 
 Enjoy using RedEye! ❤️`
     );
@@ -195,14 +199,16 @@ Enjoy using RedEye! ❤️`
   }
 });
 
+// Ready event
 client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN);
-
-// Express server to keep bot awake on Render
+// Keep alive Express server
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
+app.get('/', (req, res) => res.send('✅ RedEye bot is alive.'));
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
+
+// Start bot
+client.login(process.env.DISCORD_TOKEN)
