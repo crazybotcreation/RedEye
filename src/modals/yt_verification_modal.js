@@ -8,6 +8,7 @@ import {
 } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ Auto GitHub commit
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
@@ -58,6 +59,9 @@ export default {
 
     // Save the updated file
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+
+    // ✅ Commit change to GitHub
+    await commitYoutubeUsersFile();
 
     const embed = new EmbedBuilder()
       .setTitle('✅ YouTube Verification Complete!')
