@@ -1,56 +1,64 @@
 // src/modals/yt_verification_modal.js
-import { EmbedBuilder } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
+import {
+  ModalSubmitInteraction,
+  EmbedBuilder
+} from 'discord.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const CONFIG_PATH = path.join(process.cwd(), 'channel-config.json');
+const USERS_FILE = path.join(process.cwd(), 'youtube-users.json');
 
 export default {
   customId: 'yt_verification_modal',
-
+  /**
+   * @param {ModalSubmitInteraction} interaction
+   */
   async execute(interaction) {
-    const channelUrl = interaction.fields.getTextInputValue('channel_url');
-    const subscriberCount = parseInt(interaction.fields.getTextInputValue('subscriber_count'), 10);
+    const ytUrl = interaction.fields.getTextInputValue('yt_url_input');
+    const channelMatch = ytUrl.match(/(?:\/channel\/|channelId=)([a-zA-Z0-9_-]{24})/i);
+    const ytChannelId = channelMatch?.[1];
 
-    if (isNaN(subscriberCount) || subscriberCount < 10) {
+    if (!ytChannelId) {
       return interaction.reply({
-        content: '❌ You must have at least 10 subscribers to verify.',
+        content: '❌ Invalid YouTube channel URL. Make sure it includes /channel/CHANNEL_ID',
         ephemeral: true
       });
     }
 
-    // Load working channel from config
-    let config = {};
+    const userId = interaction.user.id;
+    const guildId = interaction.guild.id;
+    const channelId = interaction.channelId;
+
+    // Load or initialize JSON
+    let userData = {};
+    if (fs.existsSync(USERS_FILE)) {
+      try {
+        userData = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+      } catch (err) {
+        console.error('❌ Error reading youtube-users.json:', err);
+      }
+    }
+
+    // Save or update user entry
+    userData[userId] = {
+      channelId: ytChannelId,
+      channel: channelId,
+      guild: guildId
+    };
+
     try {
-      config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+      fs.writeFileSync(USERS_FILE, JSON.stringify(userData, null, 2));
+      console.log(`✅ Saved YouTube channel for ${interaction.user.tag}`);
     } catch (err) {
-      console.error('❌ Failed to read config file:', err.message);
+      console.error('❌ Failed to write youtube-users.json:', err);
     }
 
-    const workingChannelId = config[interaction.guildId];
-    const workingChannel = interaction.guild.channels.cache.get(workingChannelId);
+    // Respond to user
+    const embed = new EmbedBuilder()
+      .setTitle('✅ YouTube Channel Verified!')
+      .setDescription(`Thanks <@${userId}>, your channel has been saved.\nI'll start monitoring your uploads!`)
+      .setColor(0x00ff00);
 
-    if (!workingChannel) {
-      return interaction.reply({
-        content: '⚠️ Cannot find the working channel. Please ask the server owner to use `/here` command.',
-        ephemeral: true
-      });
-    }
-
-    // Public embed in working channel
-    const publicEmbed = new EmbedBuilder()
-      .setTitle('✅ Verified YouTuber!')
-      .setDescription(`**${interaction.user.tag}** is a verified YouTube creator!\n\n📺 [Visit Channel](${channelUrl})`)
-      .setColor(0x00ff00)
-      .setFooter({ text: 'RedEye YouTube Verified' })
-      .setTimestamp();
-
-    await workingChannel.send({ embeds: [publicEmbed] });
-
-    // Private confirmation
-    await interaction.reply({
-      content: '✅ You have been verified! Your channel is now being tracked for new videos.',
-      ephemeral: true
-    });
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   }
 }
