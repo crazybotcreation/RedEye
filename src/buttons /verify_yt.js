@@ -1,5 +1,10 @@
 // src/buttons/verify_yt.js
-import { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle } from 'discord.js';
+import {
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder
+} from 'discord.js';
 
 export default {
   customId: 'verify_yt',
@@ -7,27 +12,27 @@ export default {
   async execute(interaction) {
     const modal = new ModalBuilder()
       .setCustomId('yt_verification_modal')
-      .setTitle('📺 YouTube Verification');
+      .setTitle('🔍 YouTube Verification');
 
-    const channelUrlInput = new TextInputBuilder()
+    const channelInput = new TextInputBuilder()
       .setCustomId('channel_url')
-      .setLabel('Your YouTube Channel URL')
-      .setPlaceholder('https://www.youtube.com/@yourchannel')
+      .setLabel('📺 Channel URL')
       .setStyle(TextInputStyle.Short)
+      .setPlaceholder('https://youtube.com/...')
       .setRequired(true);
 
-    const subscriberCountInput = new TextInputBuilder()
+    const subsInput = new TextInputBuilder()
       .setCustomId('subscriber_count')
-      .setLabel('Subscriber Count (Minimum 10)')
-      .setPlaceholder('Eg: 56')
+      .setLabel('👥 Subscriber Count')
       .setStyle(TextInputStyle.Short)
+      .setPlaceholder('Enter number (must be at least 10)')
       .setRequired(true);
 
-    const firstRow = new ActionRowBuilder().addComponents(channelUrlInput);
-    const secondRow = new ActionRowBuilder().addComponents(subscriberCountInput);
+    const row1 = new ActionRowBuilder().addComponents(channelInput);
+    const row2 = new ActionRowBuilder().addComponents(subsInput);
 
-    modal.addComponents(firstRow, secondRow);
+    modal.addComponents(row1, row2);
 
     await interaction.showModal(modal);
   }
-}
+};
