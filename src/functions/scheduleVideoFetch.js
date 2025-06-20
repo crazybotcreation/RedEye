@@ -1,30 +1,26 @@
-// src/functions/scheduleVideoFetch.js
 import fs from 'node:fs';
 import path from 'node:path';
 import postLatestVideo from './postLatestVideo.js';
 
-const USERS_PATH = path.join(process.cwd(), 'youtube-users.json');
-const CONFIG_PATH = path.join(process.cwd(), 'channel-config.json');
+const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
 export default function scheduleVideoFetch(client) {
-  setInterval(async () => {
+  setInterval(() => {
+    if (!fs.existsSync(dataPath)) return;
+
+    const raw = fs.readFileSync(dataPath, 'utf8');
+    let users;
+
     try {
-      if (!fs.existsSync(USERS_PATH)) return;
-
-      const users = JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
-      const config = fs.existsSync(CONFIG_PATH)
-        ? JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
-        : {};
-
-      for (const userId in users) {
-        const { channelId: youtubeChannelId, guildId } = users[userId];
-        const channelId = config[guildId];
-        if (!channelId) continue;
-
-        await postLatestVideo(client, userId, channelId, youtubeChannelId);
-      }
+      users = JSON.parse(raw);
     } catch (err) {
-      console.error('❌ Error in scheduled video fetch:', err);
+      console.error('❌ Failed to parse youtube-users.json:', err);
+      return;
     }
-  }, 60_000); // Run every 60 seconds
-        }
+
+    for (const userId in users) {
+      const entry = users[userId];
+      postLatestVideo(client, userId, entry.channelId, entry.youtubeChannelId);
+    }
+  }, 60_000); // every 60 seconds
+}
