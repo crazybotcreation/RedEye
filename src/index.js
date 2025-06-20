@@ -13,6 +13,7 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
+import { startVideoCheckLoop } from './jobs/videoCheckLoop.js';
 
 config();
 
@@ -203,6 +204,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
+  startVideoCheckLoop(client); // ⏱️ Start auto YouTube check loop
 });
 
 client.login(process.env.DISCORD_TOKEN);
@@ -211,4 +213,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('✅ RedEye Bot is running.'));
-app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`))
