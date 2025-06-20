@@ -107,7 +107,7 @@ const deployCommands = async () => {
 
 await deployCommands();
 
-// Load buttons
+// ✅ Load buttons (updated)
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
   for (const file of buttonFiles) {
@@ -193,4 +193,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('✅ RedEye Bot is running.'));
-app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`));
