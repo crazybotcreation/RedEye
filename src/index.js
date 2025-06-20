@@ -19,10 +19,10 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ FIXED PATHS for Render structure
-const commandsPath = path.join(process.cwd(), 'src', 'commands');
-const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
-const modalsPath = path.join(process.cwd(), 'src', 'modals');
+// ✅ Corrected for Render’s directory structure
+const commandsPath = path.join(__dirname, 'commands');
+const buttonsPath = path.join(__dirname, 'buttons');
+const modalsPath = path.join(__dirname, 'modals');
 
 console.log('📂 Looking for commands in:', commandsPath);
 
