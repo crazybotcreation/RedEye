@@ -2,35 +2,43 @@
 import { EmbedBuilder } from 'discord.js';
 import fetch from 'node-fetch';
 
+const apiKeys = process.env.YT_API_KEYS?.split(',').map(k => k.trim()).filter(Boolean) || [];
+let currentKeyIndex = 0;
+let usagePerKey = new Map(apiKeys.map(key => [key, 0]));
+const MAX_USAGE_PER_KEY = 9500; // Reserve margin from 10,000
+
+function getNextValidKey() {
+  for (let i = 0; i < apiKeys.length; i++) {
+    const key = apiKeys[currentKeyIndex];
+    if (usagePerKey.get(key) < MAX_USAGE_PER_KEY) return key;
+    currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+  }
+  return null; // All keys are exhausted
+}
+
 export default async function postLatestVideo(client, userId, channelId, youtubeChannelId) {
   try {
     const channel = await client.channels.fetch(channelId);
     if (!channel) return console.warn(`❌ Channel ${channelId} not found.`);
 
-    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${youtubeChannelId}`;
-    const res = await fetch(rssUrl);
-    if (!res.ok) throw new Error(`Failed to fetch RSS feed for ${youtubeChannelId}`);
+    const apiKey = getNextValidKey();
+    if (!apiKey) return console.warn('❌ All YouTube API keys have exceeded their quota.');
+    usagePerKey.set(apiKey, usagePerKey.get(apiKey) + 1);
 
-    const xml = await res.text();
-    const latestMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
-    if (!latestMatch) return console.warn(`⚠️ No videos found for channel ${youtubeChannelId}`);
+    const apiUrl = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${youtubeChannelId}&part=snippet&order=date&maxResults=1`;
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error(`Failed to fetch YouTube API response for ${youtubeChannelId}`);
 
-    const entry = latestMatch[1];
-    const urlMatch = entry.match(/<link rel='alternate' href='(.*?)'/);
-    const titleMatch = entry.match(/<title>(.*?)<\/title>/);
-    const idMatch = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/);
+    const data = await res.json();
+    const video = data.items?.[0];
+    if (!video || !video.id?.videoId) return console.warn(`⚠️ No videos found for channel ${youtubeChannelId}`);
 
-    if (!urlMatch || !titleMatch || !idMatch) return console.warn('⚠️ Could not parse video data');
-
-    const videoUrl = urlMatch[1];
-    const title = titleMatch[1];
-    const videoId = idMatch[1];
+    const videoId = video.id.videoId;
+    const title = video.snippet.title;
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
     const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-    // Send message and embed
-    await channel.send({
-      content: `<@${userId}> just uploaded a video! ${videoUrl}`
-    });
+    await channel.send({ content: `<@${userId}> just uploaded a video! ${videoUrl}` });
 
     const embed = new EmbedBuilder()
       .setTitle(title)
