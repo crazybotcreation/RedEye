@@ -13,9 +13,9 @@ export default {
   async execute(interaction) {
     try {
       const inviterId = interaction.client.inviterMap?.get(interaction.guild.id);
-      const isOwner = interaction.guild.ownerId === interaction.user.id;
+      const ownerId = interaction.guild.ownerId;
 
-      if (interaction.user.id !== inviterId && !isOwner) {
+      if (interaction.user.id !== inviterId && interaction.user.id !== ownerId) {
         return await interaction.reply({
           content: '❌ Only the server owner or the person who invited me can use this command.',
           ephemeral: true
@@ -38,4 +38,4 @@ export default {
       });
     }
   }
-}
+};
