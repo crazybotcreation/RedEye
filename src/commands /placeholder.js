@@ -1,9 +1,8 @@
+import { SlashCommandBuilder } from 'discord.js';
+
 export default {
-  data: {
-    name: 'placeholder',
-    toJSON: () => ({ name: 'placeholder', description: 'Placeholder command' })
-  },
+  data: new SlashCommandBuilder().setName('placeholder').setDescription('Placeholder command'),
   async execute(interaction) {
-    await interaction.reply({ content: 'Placeholder command', ephemeral: true });
+    await interaction.reply('✅ Placeholder command executed!');
   }
-};
+}
