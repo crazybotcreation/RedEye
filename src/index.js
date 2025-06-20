@@ -57,7 +57,7 @@ for (const file of commandFiles) {
   }
 }
 
-// Deploy commands globally
+// 🧠 Auto-deploy slash commands on every startup (Render safe)
 const deployCommands = async () => {
   const commands = [];
 
@@ -81,7 +81,7 @@ const deployCommands = async () => {
       return;
     }
 
-    console.log(`🔍 Found ${commands.length} commands. Deploying...`);
+    console.log(`🚀 Deploying ${commands.length} slash command(s)...`);
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
       body: commands
     });
@@ -91,7 +91,7 @@ const deployCommands = async () => {
   }
 };
 
-await deployCommands();
+await deployCommands(); // <-- ✅ Auto-trigger deployment on startup
 
 // Load buttons
 if (fs.existsSync(buttonsPath)) {
@@ -192,4 +192,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
