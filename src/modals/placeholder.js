@@ -1,5 +1,6 @@
-// Placeholder for modals directory
 export default {
-  customId: null,
-  execute: null
+  customId: 'placeholder_modal',
+  async execute(interaction) {
+    await interaction.reply({ content: 'Placeholder modal submitted!', ephemeral: true });
+  }
 };
