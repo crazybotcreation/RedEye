@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "RedEye is a Discord bot that helps YouTube creators share new uploads automatically.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "cd src && node index.js"
   },
