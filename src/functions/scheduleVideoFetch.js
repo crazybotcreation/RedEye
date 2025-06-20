@@ -1,31 +1,25 @@
 // src/functions/scheduleVideoFetch.js
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import postLatestVideo from './postLatestVideo.js';
 
-const dataPath = path.join(process.cwd(), 'youtube-users.json');
-const lastVideoCache = new Map();
+const USERS_PATH = path.join(process.cwd(), 'youtube-users.json');
+const CONFIG_PATH = path.join(process.cwd(), 'channel-config.json');
 
 export default function scheduleVideoFetch(client) {
   setInterval(async () => {
-    try {
-      if (!fs.existsSync(dataPath)) return;
+    if (!fs.existsSync(USERS_PATH)) return;
 
-      const raw = fs.readFileSync(dataPath, 'utf-8');
-      const users = JSON.parse(raw);
+    const users = JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
+    const config = fs.existsSync(CONFIG_PATH)
+      ? JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
+      : {};
 
-      for (const user of users) {
-        const { userId, channelId, discordChannelId } = user;
+    for (const userId in users) {
+      const { channelId: youtubeChannelId, guildId } = users[userId];
+      const channelId = config[guildId];
+      if (!channelId) continue;
 
-        if (!userId || !channelId || !discordChannelId) continue;
-
-        // Call API once to check for latest video
-        const apiUrl = `https://www.googleapis.com/youtube/v3/search?key=API_KEY_PLACEHOLDER&channelId=${channelId}&part=snippet&order=date&maxResults=1&type=video`;
-        // We delegate actual fetching + sending to postLatestVideo which handles rotation and API logic
-        await postLatestVideo(client, userId, discordChannelId, channelId);
-      }
-
-    } catch (err) {
-      console.error('❌ Scheduler error:', err);
+      await postLatestVideo(client, userId, channelId, youtubeChannelId);
     }
-  }, 60000); // Every 60 seconds
+  }, 60_000); // Every 60 seconds
