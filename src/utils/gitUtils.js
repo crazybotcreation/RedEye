@@ -1,23 +1,32 @@
 // src/utils/gitUtils.js
-import simpleGit from 'simple-git';
-import path from 'node:path';
+import { exec } from 'node:child_process';
 import fs from 'node:fs';
+import path from 'node:path';
 
-const git = simpleGit();
+const filePath = path.join(process.cwd(), 'youtube-users.json');
 
-export async function commitYoutubeUsersFile() {
-  const filePath = path.join(process.cwd(), 'youtube-users.json');
-
-  if (!fs.existsSync(filePath)) {
-    console.warn('❌ youtube-users.json does not exist.');
-    return;
-  }
-
+export async function commitUserDataToGitHub() {
   try {
-    await git.add(filePath);
-    await git.commit(`🔄 Update youtube-users.json [${new Date().toISOString()}]`);
-    await git.push('origin', 'main');
-    console.log('✅ youtube-users.json committed and pushed to GitHub');
+    // Stage the file
+    await execPromise(`git add ${filePath}`);
+
+    // Commit the change with a timestamp
+    const timestamp = new Date().toISOString();
+    await execPromise(`git commit -m "📦 Auto update youtube-users.json at ${timestamp}"`);
+
+    // Push the commit to GitHub
+    await execPromise('git push');
+    console.log('✅ youtube-users.json changes pushed to GitHub.');
   } catch (err) {
-    console.error('❌ Git push failed:', err.message);
+    console.error('❌ Failed to commit youtube-users.json:', err.message);
   }
+}
+
+function execPromise(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (err, stdout, stderr) => {
+      if (err) return reject(err);
+      resolve(stdout || stderr);
+    });
+  });
+         }
