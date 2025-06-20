@@ -47,7 +47,7 @@ for (const file of commandFiles) {
   try {
     const command = await import(`file://${filePath}`);
     if (command.default?.data && command.default?.execute) {
-      console.log(`✅ Loaded command: ${command.default.data.name}`);
+      console.log(`✅ Loaded command: /${command.default.data.name}`);
       client.commands.set(command.default.data.name, command.default);
     } else {
       console.warn(`⚠️ Skipped ${file} — missing data or execute`);
@@ -67,6 +67,7 @@ const deployCommands = async () => {
       const command = await import(`file://${filePath}`);
       if (command.default?.data) {
         commands.push(command.default.data.toJSON());
+        console.log(`📤 Prepared to deploy: /${command.default.data.name}`);
       }
     } catch (err) {
       console.error(`❌ Failed to import during deploy: ${file}`, err);
@@ -81,17 +82,18 @@ const deployCommands = async () => {
       return;
     }
 
-    console.log(`🚀 Deploying ${commands.length} slash command(s)...`);
-    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-      body: commands
-    });
-    console.log('✅ Slash commands deployed successfully.');
+    console.log(`🚀 Deploying ${commands.length} slash command(s) to Discord...`);
+    const data = await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
+    console.log(`✅ Global commands deployed:`, data.map(cmd => cmd.name));
   } catch (error) {
     console.error('❌ Failed to deploy commands:', error);
   }
 };
 
-await deployCommands(); // <-- ✅ Auto-trigger deployment on startup
+await deployCommands(); // <-- runs on every startup
 
 // Load buttons
 if (fs.existsSync(buttonsPath)) {
@@ -192,4 +194,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
-app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Express listening on port ${PORT}`))
