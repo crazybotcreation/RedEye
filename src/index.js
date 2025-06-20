@@ -23,6 +23,7 @@ const __dirname = path.dirname(__filename);
 const commandsPath = path.join(__dirname, 'commands');
 const buttonsPath = path.join(__dirname, 'buttons');
 const modalsPath = path.join(__dirname, 'modals');
+const configPath = path.join(process.cwd(), 'channel-config.json');
 
 console.log('🧠 God Mode Diagnostics Enabled');
 console.log('📂 Working Directory:', process.cwd());
@@ -107,7 +108,7 @@ const deployCommands = async () => {
 
 await deployCommands();
 
-// ✅ Load buttons (updated)
+// ✅ Load buttons
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
   for (const file of buttonFiles) {
@@ -158,6 +159,23 @@ Let me know if you need help anytime. 😎`
     console.log(`📩 Sent DM to ${owner.user.tag} after joining ${guild.name}`);
   } catch (err) {
     console.warn(`❌ Could not send DM to server owner of ${guild.name}:`, err.message);
+  }
+});
+
+// 🧠 MUSCLE 4: Reset server memory if bot gets kicked
+client.on(Events.GuildDelete, async (guild) => {
+  try {
+    client.inviterMap.delete(guild.id); // Clear inviter cache
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (config[guild.id]) {
+        delete config[guild.id];
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        console.log(`🧹 Reset memory for guild ${guild.name} (${guild.id})`);
+      }
+    }
+  } catch (err) {
+    console.warn(`❌ Error resetting memory for ${guild.name}:`, err.message);
   }
 });
 
