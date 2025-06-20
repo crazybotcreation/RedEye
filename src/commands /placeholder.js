@@ -1,5 +1,9 @@
-// This is a placeholder to keep the folder tracked by Git.
 export default {
-  data: null,
-  execute: null
+  data: {
+    name: 'placeholder',
+    toJSON: () => ({ name: 'placeholder', description: 'Placeholder command' })
+  },
+  async execute(interaction) {
+    await interaction.reply({ content: 'Placeholder command', ephemeral: true });
+  }
 };
