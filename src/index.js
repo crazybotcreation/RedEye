@@ -19,10 +19,10 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ FIXED PATH: root/commands instead of root/src/commands
-const commandsPath = path.join(process.cwd(), 'commands');
-const buttonsPath = path.join(process.cwd(), 'src', 'buttons');
-const modalsPath = path.join(process.cwd(), 'src', 'modals');
+// ✅ FIXED: correct path to /commands folder at project root
+const commandsPath = path.join(__dirname, '..', 'commands');
+const buttonsPath = path.join(__dirname, 'buttons');
+const modalsPath = path.join(__dirname, 'modals');
 
 console.log('📂 Looking for commands in:', commandsPath);
 
@@ -47,7 +47,7 @@ for (const file of commandFiles) {
   try {
     const command = await import(`file://${filePath}`);
     if (command.default?.data && command.default?.execute) {
-      console.log(`✅ Loaded command: /${command.default.data.name}`);
+      console.log(`✅ Loaded command: ${command.default.data.name}`);
       client.commands.set(command.default.data.name, command.default);
     } else {
       console.warn(`⚠️ Skipped ${file} — missing data or execute`);
@@ -57,7 +57,7 @@ for (const file of commandFiles) {
   }
 }
 
-// 🧠 Auto-deploy slash commands on every startup (Render safe)
+// Deploy commands globally
 const deployCommands = async () => {
   const commands = [];
 
@@ -83,17 +83,16 @@ const deployCommands = async () => {
     }
 
     console.log(`🚀 Deploying ${commands.length} slash command(s) to Discord...`);
-    const data = await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-    console.log(`✅ Global commands deployed:`, data.map(cmd => cmd.name));
+    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
+      body: commands
+    });
+    console.log(`✅ Global commands deployed: [ ${commands.map(c => c.name).join(', ')} ]`);
   } catch (error) {
     console.error('❌ Failed to deploy commands:', error);
   }
 };
 
-await deployCommands(); // <-- runs on every startup
+await deployCommands();
 
 // Load buttons
 if (fs.existsSync(buttonsPath)) {
@@ -188,6 +187,7 @@ client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
+// Start bot
 client.login(process.env.DISCORD_TOKEN);
 
 // Dummy Express server to stay awake on Render
