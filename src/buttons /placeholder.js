@@ -1,5 +1,6 @@
-// Placeholder to ensure buttons folder is deployed
 export default {
-  customId: null,
-  execute: null
+  customId: 'placeholder_button',
+  async execute(interaction) {
+    await interaction.reply({ content: 'Placeholder button clicked!', ephemeral: true });
+  }
 };
