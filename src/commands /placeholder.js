@@ -4,7 +4,7 @@ import { SlashCommandBuilder } from 'discord.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('placeholder')
-    .setDescription('Placeholder command for testing.'),
+    .setDescription('This is a test slash command.'),
   async execute(interaction) {
     await interaction.reply('✅ Slash commands are working!');
   }
