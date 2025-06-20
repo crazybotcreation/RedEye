@@ -1,27 +1,31 @@
 {
-  "name": "redeye-bot",
+  "name": "redeye",
   "version": "1.0.0",
-  "description": "RedEye is a Discord bot that helps YouTube creators share new uploads automatically.",
-  "main": "index.js",
+  "description": "RedEye Discord bot for YouTube verification and updates",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "cd src && node index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [
     "discord",
     "bot",
     "youtube",
     "verification",
-    "automation"
+    "redeye"
   ],
   "author": "crazybotcreation",
   "license": "MIT",
   "dependencies": {
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.3.2",
     "express": "^4.19.2"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }
