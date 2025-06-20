@@ -19,12 +19,15 @@ config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Corrected for Render’s directory structure
+// ✅ Correct paths (inside src folder)
 const commandsPath = path.join(__dirname, 'commands');
 const buttonsPath = path.join(__dirname, 'buttons');
 const modalsPath = path.join(__dirname, 'modals');
 
-console.log('📂 Looking for commands in:', commandsPath);
+console.log('🗂️ Initializing folders...');
+console.log('📁 Commands Path:', commandsPath);
+console.log('📁 Buttons Path:', buttonsPath);
+console.log('📁 Modals Path:', modalsPath);
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -40,17 +43,21 @@ const commandFiles = fs.existsSync(commandsPath)
   ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
   : [];
 
-console.log('📄 Found command files:', commandFiles);
+if (commandFiles.length === 0) {
+  console.warn('⚠️ No command files found.');
+} else {
+  console.log('📄 Found command files:', commandFiles);
+}
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   try {
     const command = await import(`file://${filePath}`);
     if (command.default?.data && command.default?.execute) {
-      console.log(`✅ Loaded command: ${command.default.data.name}`);
       client.commands.set(command.default.data.name, command.default);
+      console.log(`✅ Loaded command: ${command.default.data.name}`);
     } else {
-      console.warn(`⚠️ Skipped ${file} — missing data or execute`);
+      console.warn(`⚠️ Skipped ${file} — missing "data" or "execute".`);
     }
   } catch (err) {
     console.error(`❌ Failed to import ${file}:`, err);
@@ -78,7 +85,7 @@ const deployCommands = async () => {
 
   try {
     if (commands.length === 0) {
-      console.warn('⚠️ No slash commands found to deploy.');
+      console.warn('⚠️ No slash commands to deploy.');
       return;
     }
 
@@ -97,33 +104,49 @@ await deployCommands();
 // Load buttons
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
+  if (buttonFiles.length === 0) {
+    console.warn('⚠️ No button files found.');
+  }
   for (const file of buttonFiles) {
     const filePath = path.join(buttonsPath, file);
     try {
       const button = await import(`file://${filePath}`);
       if (button.default?.customId && button.default?.execute) {
         client.buttons.set(button.default.customId, button.default);
+        console.log(`✅ Loaded button: ${button.default.customId}`);
+      } else {
+        console.warn(`⚠️ Skipped button ${file}`);
       }
     } catch (err) {
       console.error(`❌ Failed to import button ${file}:`, err);
     }
   }
+} else {
+  console.warn('⚠️ Buttons path does not exist.');
 }
 
 // Load modals
 if (fs.existsSync(modalsPath)) {
   const modalFiles = fs.readdirSync(modalsPath).filter(file => file.endsWith('.js'));
+  if (modalFiles.length === 0) {
+    console.warn('⚠️ No modal files found.');
+  }
   for (const file of modalFiles) {
     const filePath = path.join(modalsPath, file);
     try {
       const modal = await import(`file://${filePath}`);
       if (modal.default?.customId && modal.default?.execute) {
         client.modals.set(modal.default.customId, modal.default);
+        console.log(`✅ Loaded modal: ${modal.default.customId}`);
+      } else {
+        console.warn(`⚠️ Skipped modal ${file}`);
       }
     } catch (err) {
       console.error(`❌ Failed to import modal ${file}:`, err);
     }
   }
+} else {
+  console.warn('⚠️ Modals path does not exist.');
 }
 
 // Handle interactions
@@ -165,7 +188,7 @@ client.on(Events.InteractionCreate, async interaction => {
 client.on(Events.GuildCreate, async guild => {
   try {
     const owner = await guild.fetchOwner();
-    owner.send(
+    await owner.send(
       `👋 Thanks for adding RedEye bot to your server!
 
 📌 Here's how to get started:
@@ -179,7 +202,7 @@ client.on(Events.GuildCreate, async guild => {
 Enjoy using RedEye! ❤️`
     );
   } catch (error) {
-    console.error('Could not DM server owner:', error);
+    console.error('❌ Could not DM server owner:', error);
   }
 });
 
@@ -189,7 +212,7 @@ client.once(Events.ClientReady, () => {
 
 client.login(process.env.DISCORD_TOKEN);
 
-// Dummy Express server to stay awake on Render
+// Express server to keep bot awake on Render
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('RedEye bot is alive!'));
