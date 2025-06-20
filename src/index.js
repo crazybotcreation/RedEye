@@ -13,6 +13,7 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
+import scheduleVideoFetch from './functions/scheduleVideoFetch.js'; // ✅ NEW
 
 config();
 
@@ -203,6 +204,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
+  scheduleVideoFetch(client); // ✅ NEW: Start scheduler after ready
 });
 
 client.login(process.env.DISCORD_TOKEN);
