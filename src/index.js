@@ -74,9 +74,11 @@ const deployCommands = async () => {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const cmd = await import(`file://${filePath}`);
-    if (cmd.default?.data) {
+    if (cmd.default?.data?.toJSON) {
       commandsToDeploy.push(cmd.default.data.toJSON());
       console.log(`📤 Ready to deploy: /${cmd.default.data.name}`);
+    } else {
+      console.warn(`⚠️ Skipped deploy for ${file} (invalid or missing data.toJSON())`);
     }
   }
 
@@ -150,6 +152,30 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
+// DM server owner on invite
+client.on(Events.GuildCreate, async (guild) => {
+  try {
+    const owner = await guild.fetchOwner();
+
+    const message = `
+👋 **Thanks for adding RedEye to ${guild.name}!**
+
+🔧 Here's how to use me:
+• Use \`/here\` in a channel to set my working space.
+• Use \`/dontmore\` to stop me from messaging in your server.
+
+⚠️ **Warning**: By default, I may message anywhere in the server unless configured properly. Please use the above commands to manage this.
+
+Need help? Contact support or check the GitHub page: https://github.com/crazybotcreation/RedEye
+    `;
+
+    await owner.send({ content: message });
+    console.log(`✅ Sent welcome DM to owner of ${guild.name}`);
+  } catch (err) {
+    console.warn(`⚠️ Failed to send DM to owner of ${guild.name}:`, err.message);
+  }
+});
+
 client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
@@ -160,4 +186,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('✅ RedEye Bot is running.'));
-app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`))
