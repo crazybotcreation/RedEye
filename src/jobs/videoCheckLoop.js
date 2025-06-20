@@ -46,3 +46,4 @@ export default async function postLatestVideo(client, userId, channelId, youtube
 
   posted[youtubeChannelId] = videoId;
   fs.writeFileSync(configPath, JSON.stringify(posted, null, 2));
+      }
