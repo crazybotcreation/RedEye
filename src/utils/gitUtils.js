@@ -23,9 +23,6 @@ export function commitYoutubeUsersFile() {
   }
 }
 
-// Add this temporarily to the bottom of gitUtils.js
-import { execSync } from 'node:child_process';
-
 export function debugGitStatus() {
   try {
     console.log('📡 GIT REMOTE:');
