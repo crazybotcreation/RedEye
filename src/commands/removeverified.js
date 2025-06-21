@@ -1,8 +1,7 @@
-// src/commands/removeverified.js
 import { SlashCommandBuilder } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ Push updated file to GitHub
+import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 const OWNER_ID = '1354501822429265921';
@@ -47,11 +46,11 @@ export default {
     delete data[targetId];
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-    await commitYoutubeUsersFile(); // ✅ GitHub auto update
+    await commitYoutubeUsersFile();
 
     await interaction.reply({
       content: `✅ Removed verification data for <@${targetId}>.`,
       ephemeral: true
     });
   }
-}
+};
