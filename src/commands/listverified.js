@@ -4,12 +4,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
-const OWNER_ID = '1354501822429265921'; // ✅ Only you can run this
+const OWNER_ID = '1354501822429265921';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('listverified')
-    .setDescription('List all YouTube-verified users (only for owner).'),
+    .setDescription('List all verified users (only for owner).'),
 
   async execute(interaction) {
     if (interaction.user.id !== OWNER_ID) {
@@ -19,34 +19,33 @@ export default {
       });
     }
 
-    if (!fs.existsSync(dataPath)) {
-      return interaction.reply({
-        content: '⚠️ No data file found.',
-        ephemeral: true
-      });
+    let data = {};
+    if (fs.existsSync(dataPath)) {
+      try {
+        data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+      } catch {
+        data = {};
+      }
     }
 
-    const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    const entries = Object.entries(data);
 
-    if (!data || Object.keys(data).length === 0) {
+    if (entries.length === 0) {
       return interaction.reply({
         content: '📦 No verified users stored.',
         ephemeral: true
       });
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle('📋 Verified YouTube Users')
-      .setColor(0x00ff88);
+    const lines = entries.map(([userId, info]) => {
+      return `👤 <@${userId}> — YT: \`${info.channelId}\`\n🌐 Guild: \`${info.guild}\``;
+    });
 
-    for (const [userId, { channelId, guild }] of Object.entries(data)) {
-      embed.addFields({
-        name: `<@${userId}>`,
-        value: `📺 Channel ID: \`${channelId}\`\n🌐 Guild: \`${guild}\``,
-        inline: false
-      });
-    }
+    const embed = new EmbedBuilder()
+      .setTitle('✅ Verified Users List')
+      .setDescription(lines.join('\n\n'))
+      .setColor(0x00ccff);
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
   }
-}
+};
