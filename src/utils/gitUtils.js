@@ -22,3 +22,21 @@ export function commitYoutubeUsersFile() {
     console.error('❌ Git commit failed:', err.message);
   }
 }
+
+// Add this temporarily to the bottom of gitUtils.js
+import { execSync } from 'node:child_process';
+
+export function debugGitStatus() {
+  try {
+    console.log('📡 GIT REMOTE:');
+    console.log(execSync('git remote -v').toString());
+
+    console.log('📂 GIT STATUS:');
+    console.log(execSync('git status').toString());
+
+    console.log('📄 GIT LOG:');
+    console.log(execSync('git log -n 1').toString());
+  } catch (err) {
+    console.error('❌ Git diagnostics failed:', err.message);
+  }
+}
