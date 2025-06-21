@@ -16,7 +16,7 @@ export function commitYoutubeUsersFile() {
     execSync('git config user.email "redeye-bot@users.noreply.github.com"');
     execSync('git add youtube-users.json');
     execSync('git commit -m "🔁 Update youtube-users.json [auto-commit]"');
-    execSync('git push');
+    execSync('git push origin main'); // ✅ Render requires explicit remote
     console.log('✅ Auto-committed youtube-users.json to GitHub');
   } catch (err) {
     console.error('❌ Git commit failed:', err.message);
@@ -36,4 +36,4 @@ export function debugGitStatus() {
   } catch (err) {
     console.error('❌ Git diagnostics failed:', err.message);
   }
-}
+             
