@@ -1,9 +1,5 @@
 // src/modals/yt_verification_modal.js
 import {
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder,
   EmbedBuilder
 } from 'discord.js';
 import fs from 'node:fs';
@@ -73,4 +69,4 @@ export default {
       ephemeral: true
     });
   }
-}
+      
