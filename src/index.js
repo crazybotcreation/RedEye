@@ -9,8 +9,6 @@ import {
   Routes
 } from 'discord.js';
 
-import './debug/ssh-diagnostics.js'; // 👈 TEMP: Git SSH diagnostic log
-
 import express from 'express';
 import { config } from 'dotenv';
 import fs from 'node:fs';
@@ -35,6 +33,8 @@ if (!fs.existsSync(keyPath)) {
     console.warn('⚠️ GIT_SSH_PRIVATE_KEY not set in environment.');
   }
 }
+
+import './debug/ssh-diagnostics.js'; // ✅ Moved here (after writing SSH key)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -232,4 +232,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('✅ RedEye Bot is running.'));
-app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`));
