@@ -14,13 +14,15 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'node:child_process';
 import scheduleVideoFetch from './functions/scheduleVideoFetch.js'; // ✅ NEW
 
 config();
 
-// ✅ Write GIT SSH key for auto-commits
+// ✅ Write GIT SSH key + configure GitHub trust + ensure SSH remote
 const sshDir = path.join(process.env.HOME || '/root', '.ssh');
 const keyPath = path.join(sshDir, 'id_ed25519');
+const knownHostsPath = path.join(sshDir, 'known_hosts');
 
 if (!fs.existsSync(sshDir)) fs.mkdirSync(sshDir, { recursive: true });
 
@@ -32,6 +34,42 @@ if (!fs.existsSync(keyPath)) {
   } else {
     console.warn('⚠️ GIT_SSH_PRIVATE_KEY not set in environment.');
   }
+}
+
+// ✅ Add GitHub to known_hosts
+if (!fs.existsSync(knownHostsPath)) {
+  try {
+    const githubHost = execSync('ssh-keyscan github.com').toString();
+    fs.writeFileSync(knownHostsPath, githubHost);
+    console.log('🔐 Added GitHub to known_hosts');
+  } catch (err) {
+    console.warn('⚠️ Failed to add GitHub to known_hosts:', err.message);
+  }
+}
+
+// ✅ Force git remote to SSH
+try {
+  const remoteUrl = execSync('git remote get-url origin').toString().trim();
+  if (!remoteUrl.startsWith('git@github.com')) {
+    execSync('git remote set-url origin git@github.com:crazybotcreation/RedEye.git');
+    console.log('🔁 Switched git remote to SSH');
+  }
+} catch (err) {
+  console.warn('⚠️ Could not set git remote:', err.message);
+}
+
+// ✅ Git diagnostics
+try {
+  console.log('📡 GIT REMOTE:');
+  console.log(execSync('git remote -v').toString());
+
+  console.log('📂 GIT STATUS:');
+  console.log(execSync('git status').toString());
+
+  console.log('📄 GIT LOG:');
+  console.log(execSync('git log -n 1').toString());
+} catch (err) {
+  console.warn('⚠️ Git diagnostics failed:', err.message);
 }
 
 import './debug/ssh-diagnostics.js'; // ✅ Moved here
@@ -53,10 +91,7 @@ console.log('📁 Buttons Path:', buttonsPath);
 console.log('📁 Modals Path:', modalsPath);
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
   partials: [Partials.Channel]
 });
 
@@ -223,7 +258,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-  scheduleVideoFetch(client); // ✅ NEW: Start scheduler after ready
+  scheduleVideoFetch(client); // ✅ Start scheduler after ready
 });
 
 client.login(process.env.DISCORD_TOKEN);
