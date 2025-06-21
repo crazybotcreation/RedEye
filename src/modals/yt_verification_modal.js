@@ -1,10 +1,9 @@
 // src/modals/yt_verification_modal.js
-import {
-  EmbedBuilder
-} from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ auto commit to GitHub
+import { backupYoutubeUsersFile } from '../utils/backup.js'; // ✅ backup feature
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
@@ -56,7 +55,8 @@ export default {
     // Save the updated file
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-    // ✅ Trigger GitHub auto commit
+    // ✅ Trigger local backup and GitHub commit
+    backupYoutubeUsersFile();
     await commitYoutubeUsersFile();
 
     const embed = new EmbedBuilder()
@@ -69,4 +69,4 @@ export default {
       ephemeral: true
     });
   }
-      
+}
