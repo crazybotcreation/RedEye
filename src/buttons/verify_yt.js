@@ -1,7 +1,6 @@
 // src/buttons/verify_yt.js
 import {
   ActionRowBuilder,
-  ButtonInteraction,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle
@@ -15,8 +14,9 @@ export default {
       .setTitle('YouTube Verification');
 
     const ytChannelInput = new TextInputBuilder()
-      .setCustomId('yt_channel') // ✅ MUST MATCH THIS ID
+      .setCustomId('yt_channel') // ✅ MUST match expected field ID in modal handler
       .setLabel('Your YouTube Channel URL')
+      .setPlaceholder('https://youtube.com/channel/...')
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
@@ -25,4 +25,4 @@ export default {
 
     await interaction.showModal(modal);
   }
-}
+};
