@@ -1,4 +1,3 @@
-// src/utils/gitUtils.js
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,7 +15,7 @@ export function commitYoutubeUsersFile() {
     execSync('git config user.email "redeye-bot@users.noreply.github.com"');
     execSync('git add youtube-users.json');
     execSync('git commit -m "🔁 Update youtube-users.json [auto-commit]"');
-    execSync('git push origin main'); // ✅ Render requires explicit remote
+    execSync('git push origin main');
     console.log('✅ Auto-committed youtube-users.json to GitHub');
   } catch (err) {
     console.error('❌ Git commit failed:', err.message);
@@ -36,3 +35,4 @@ export function debugGitStatus() {
   } catch (err) {
     console.error('❌ Git diagnostics failed:', err.message);
   }
+}
