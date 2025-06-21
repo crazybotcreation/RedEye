@@ -34,7 +34,7 @@ if (!fs.existsSync(keyPath)) {
   }
 }
 
-import './debug/ssh-diagnostics.js'; // ✅ Moved here (after writing SSH key)
+import './debug/ssh-diagnostics.js'; // ✅ Moved here
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -232,4 +232,4 @@ client.login(process.env.DISCORD_TOKEN);
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('✅ RedEye Bot is running.'));
-app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Listening on port ${PORT}`))
