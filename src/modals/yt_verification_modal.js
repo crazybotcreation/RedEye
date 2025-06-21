@@ -52,11 +52,19 @@ export default {
       guild: guildId
     };
 
+    // Debug output just before saving
+    console.log('🧪 Writing data to youtube-users.json:', data);
+
     // Save the updated file
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
     // ✅ Trigger local backup and GitHub commit
     backupYoutubeUsersFile();
+
+    // Confirm file contents before Git commit
+    const fileContent = fs.readFileSync(dataPath, 'utf8');
+    console.log('📄 File content before git commit:', fileContent);
+
     await commitYoutubeUsersFile();
 
     const embed = new EmbedBuilder()
@@ -69,4 +77,4 @@ export default {
       ephemeral: true
     });
   }
-}
+  }
