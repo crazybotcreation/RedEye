@@ -17,6 +17,22 @@ import scheduleVideoFetch from './functions/scheduleVideoFetch.js'; // ✅ NEW
 
 config();
 
+// ✅ Write GIT SSH key for auto-commits
+const sshDir = path.join(process.env.HOME || '/root', '.ssh');
+const keyPath = path.join(sshDir, 'id_ed25519');
+
+if (!fs.existsSync(sshDir)) fs.mkdirSync(sshDir, { recursive: true });
+
+if (!fs.existsSync(keyPath)) {
+  const key = process.env.GIT_SSH_PRIVATE_KEY?.trim();
+  if (key) {
+    fs.writeFileSync(keyPath, key + '\n', { mode: 0o600 });
+    console.log('✅ SSH key written to ~/.ssh/id_ed25519');
+  } else {
+    console.warn('⚠️ GIT_SSH_PRIVATE_KEY not set in environment.');
+  }
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
