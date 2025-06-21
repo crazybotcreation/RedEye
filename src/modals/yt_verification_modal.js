@@ -7,13 +7,14 @@ import { backupYoutubeUsersFile } from '../utils/backup.js'; // ✅ backup featu
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
+// ✅ Improved URL extractor: accepts only /channel/UC... links
 function extractChannelId(url) {
   try {
     const parsed = new URL(url);
     const parts = parsed.pathname.split('/');
-    const id = parts[2] || parts[1];
-    if (!id) return null;
-    return id;
+    // Accept only URLs that follow /channel/UC...
+    if (parts[1] !== 'channel' || !parts[2]?.startsWith('UC')) return null;
+    return parts[2];
   } catch (e) {
     return null;
   }
@@ -26,7 +27,7 @@ export default {
     const ytChannelId = extractChannelId(ytUrl);
     if (!ytChannelId) {
       return interaction.reply({
-        content: '❌ Invalid YouTube URL. Please submit a correct one.',
+        content: '❌ Invalid YouTube URL. Please submit a correct one. Example: https://www.youtube.com/channel/UCxxxxxx',
         ephemeral: true
       });
     }
@@ -77,4 +78,4 @@ export default {
       ephemeral: true
     });
   }
-  }
+}
