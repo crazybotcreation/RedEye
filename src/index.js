@@ -8,6 +8,9 @@ import {
   REST,
   Routes
 } from 'discord.js';
+
+import './debug/ssh-diagnostics.js'; // 👈 TEMP: Git SSH diagnostic log
+
 import express from 'express';
 import { config } from 'dotenv';
 import fs from 'node:fs';
