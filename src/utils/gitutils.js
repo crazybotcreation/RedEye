@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
-const backupDir = path.join(process.cwd(), 'backups');
 
 export function commitYoutubeUsersFile() {
   try {
@@ -13,37 +12,19 @@ export function commitYoutubeUsersFile() {
       return;
     }
 
-    // Ensure backup directory exists
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir);
-    }
+    // Log file preview
+    const content = fs.readFileSync(dataPath, 'utf8');
+    console.log('📄 Commit Content Preview:', content);
 
-    // Create a backup of the file
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupFile = path.join(backupDir, `youtube-users-${timestamp}.json`);
-    fs.copyFileSync(dataPath, backupFile);
-    console.log(`📦 Backup created: ${backupFile}`);
-
-    // Log current content
-    const contents = fs.readFileSync(dataPath, 'utf8');
-    console.log('📄 File content before git commit:', contents);
-
-    // Git config
     execSync('git config user.name "RedEye Bot"');
     execSync('git config user.email "redeye@bot"');
 
-    // Git operations
-    console.log('📥 Running: git add youtube-users.json');
     execSync('git add youtube-users.json');
+    execSync('git commit -m "✅ Auto update youtube-users.json"');
+    execSync('git push origin main');
 
-    console.log('📝 Running: git commit');
-    execSync('git commit -m "🔁 Update youtube-users.json [auto-commit]"');
-
-    console.log('🚀 Running: git push origin main --force');
-    execSync('git push origin main --force');
-
-    console.log('✅ Git push forced. Check GitHub for file updates.');
+    console.log('✅ Auto-committed youtube-users.json to GitHub');
   } catch (err) {
     console.error('❌ Git commit failed:', err.message);
   }
-                
+      }
