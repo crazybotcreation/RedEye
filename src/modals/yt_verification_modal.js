@@ -2,17 +2,15 @@
 import { EmbedBuilder } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ auto commit to GitHub
-import { backupYoutubeUsersFile } from '../utils/backup.js'; // ✅ backup feature
+import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
+import { backupYoutubeUsersFile } from '../utils/backup.js';
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
-// ✅ Improved URL extractor: accepts only /channel/UC... links
 function extractChannelId(url) {
   try {
     const parsed = new URL(url);
     const parts = parsed.pathname.split('/');
-    // Accept only URLs that follow /channel/UC...
     if (parts[1] !== 'channel' || !parts[2]?.startsWith('UC')) return null;
     return parts[2];
   } catch (e) {
@@ -27,7 +25,7 @@ export default {
     const ytChannelId = extractChannelId(ytUrl);
     if (!ytChannelId) {
       return interaction.reply({
-        content: '❌ Invalid YouTube URL. Please submit a correct one. Example: https://www.youtube.com/channel/UCxxxxxx',
+        content: '❌ Invalid YouTube URL. Please submit a correct one.\nExample: https://www.youtube.com/channel/UCxxxxxx',
         ephemeral: true
       });
     }
@@ -46,26 +44,20 @@ export default {
       }
     }
 
-    // Store the user data under user ID
+    // Save new user data
     data[userId] = {
       channelId: ytChannelId,
       channel: channelId,
       guild: guildId
     };
 
-    // Debug output just before saving
-    console.log('🧪 Writing data to youtube-users.json:', data);
+    // 🔁 Fix GitHub {} issue by forcing file change
+    const temp = JSON.stringify(data, null, 2) + '\n'; // <--- this line is the trick
+    fs.writeFileSync(dataPath, temp);
 
-    // Save the updated file
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-
-    // ✅ Trigger local backup and GitHub commit
+    // Backup and commit
     backupYoutubeUsersFile();
-
-    // Confirm file contents before Git commit
-    const fileContent = fs.readFileSync(dataPath, 'utf8');
-    console.log('📄 File content before git commit:', fileContent);
-
+    console.log('📄 File content before git commit:', temp);
     await commitYoutubeUsersFile();
 
     const embed = new EmbedBuilder()
@@ -78,4 +70,4 @@ export default {
       ephemeral: true
     });
   }
-}
+};
