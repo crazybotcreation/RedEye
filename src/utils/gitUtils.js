@@ -36,4 +36,3 @@ export function debugGitStatus() {
   } catch (err) {
     console.error('❌ Git diagnostics failed:', err.message);
   }
-             
