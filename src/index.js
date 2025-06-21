@@ -47,15 +47,17 @@ if (!fs.existsSync(knownHostsPath)) {
   }
 }
 
-// ✅ Force git remote to SSH
+// ✅ Ensure git remote origin exists
 try {
-  const remoteUrl = execSync('git remote get-url origin').toString().trim();
-  if (!remoteUrl.startsWith('git@github.com')) {
-    execSync('git remote set-url origin git@github.com:crazybotcreation/RedEye.git');
-    console.log('🔁 Switched git remote to SSH');
+  execSync('git remote get-url origin');
+  console.log('🔁 Git remote origin already set.');
+} catch {
+  try {
+    execSync('git remote add origin git@github.com:crazybotcreation/RedEye.git');
+    console.log('✅ Git remote origin added (SSH)');
+  } catch (err) {
+    console.warn('❌ Failed to add git remote origin:', err.message);
   }
-} catch (err) {
-  console.warn('⚠️ Could not set git remote:', err.message);
 }
 
 // ✅ Git diagnostics
