@@ -1,18 +1,22 @@
 // src/modals/yt_verification_modal.js
 import fs from 'fs';
 import path from 'path';
-import { commitYoutubeUsersFile } from '../../utils/gitutils.js'; // ✅ fixed relative path
+import { commitYoutubeUsersFile } from '../../utils/gitutils.js'; // ✅ correct relative path
 
 const filePath = path.join(process.cwd(), 'youtube-users.json');
 
 export default {
   id: 'yt_verification_modal',
+
   async execute(interaction) {
-    const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink');
-    const discordChannelId = interaction.fields.getTextInputValue('discordChannel');
+    const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
+    const discordChannelId = interaction.fields.getTextInputValue('discordChannel')?.trim();
+
+    // Match YouTube channel ID from /channel/ID or /@handle format
     const youtubeChannelIdMatch = youtubeUrl.match(/(?:\/channel\/|\/@)?([a-zA-Z0-9_-]{24})/);
     const youtubeChannelId = youtubeChannelIdMatch?.[1];
 
+    // Validate input
     if (!youtubeChannelId || !/^\d{17,19}$/.test(discordChannelId)) {
       return await interaction.reply({
         content: '❌ Invalid YouTube URL or Discord Channel ID!',
@@ -20,15 +24,16 @@ export default {
       });
     }
 
-    const guildId = interaction.guildId;
     const userId = interaction.user.id;
-    let data = {};
+    const guildId = interaction.guildId;
 
+    let data = {};
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8');
       data = raw ? JSON.parse(raw) : {};
     }
 
+    // Save the verification info
     data[userId] = {
       channelId: youtubeChannelId,
       channel: discordChannelId,
@@ -39,7 +44,7 @@ export default {
     commitYoutubeUsersFile();
 
     await interaction.reply({
-      content: '✅ You are verified successfully!',
+      content: `✅ You are now verified! RedEye will track <https://www.youtube.com/channel/${youtubeChannelId}>`,
       ephemeral: true
     });
   }
