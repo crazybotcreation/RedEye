@@ -1,44 +1,35 @@
-import simpleGit from 'simple-git';
+// src/utils/gitUtils.js
+import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-const REPO_URL = 'git@github.com:crazybotcreation/RedEye.git';
-const FILE_NAME = 'youtube-users.json';
+export function commitYoutubeUsersFile() {
+  const filePath = path.join(process.cwd(), 'youtube-users.json');
 
-export async function commitYoutubeUsersFile() {
-  try {
-    const repoPath = process.cwd();
-    const filePath = path.join(repoPath, FILE_NAME);
+  exec('git config user.name "RedEyeBot"', (err) => {
+    if (err) return console.error('Git username config failed:', err);
 
-    if (!fs.existsSync(filePath)) {
-      console.warn(`⚠️ ${FILE_NAME} not found, cannot commit.`);
-      return;
-    }
+    exec('git config user.email "redeye@bot.com"', (err) => {
+      if (err) return console.error('Git email config failed:', err);
 
-    const privateKey = process.env.GIT_SSH_PRIVATE_KEY;
-    if (!privateKey) {
-      console.error('❌ GIT_SSH_PRIVATE_KEY not set in environment.');
-      return;
-    }
+      exec(`git add ${filePath}`, (err) => {
+        if (err) return console.error('Git add failed:', err);
 
-    const sshPath = '/tmp/temp_deploy_key';
-    fs.writeFileSync(sshPath, privateKey.replace(/\\n/g, '\n'), { mode: 0o600 });
+        exec('git commit -m "🔁 Update youtube-users.json"', (err) => {
+          if (err) {
+            if (err.message.includes('nothing to commit')) {
+              console.log('🟡 No changes to commit.');
+              return;
+            }
+            return console.error('Git commit failed:', err);
+          }
 
-    const GIT_SSH_COMMAND = `ssh -i ${sshPath} -o StrictHostKeyChecking=no`;
-
-    const git = simpleGit({
-      baseDir: repoPath,
-      binary: 'git',
-      maxConcurrentProcesses: 1,
-      trimmed: false
+          exec('git push origin main', (err) => {
+            if (err) return console.error('Git push failed:', err);
+            console.log('✅ youtube-users.json committed and pushed!');
+          });
+        });
+      });
     });
-
-    await git.add(FILE_NAME);
-    await git.commit(`🔄 Auto update ${FILE_NAME}`);
-    await git.push(REPO_URL, 'main', { env: { GIT_SSH_COMMAND } });
-
-    console.log(`✅ ${FILE_NAME} committed and pushed to GitHub!`);
-  } catch (err) {
-    console.error('❌ Git auto-commit failed:', err);
+  });
   }
-
