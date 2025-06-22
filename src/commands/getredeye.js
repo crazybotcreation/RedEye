@@ -7,17 +7,19 @@ export default {
     .setDescription('Get the RedEye YouTube verification panel'),
 
   async execute(interaction) {
-    const verifyButton = new ButtonBuilder()
-      .setCustomId('verify_yt')
-      .setLabel('Verify YouTube')
-      .setStyle(ButtonStyle.Success);
-
-    const row = new ActionRowBuilder().addComponents(verifyButton);
+    const verifyButton = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('verify_yt')
+        .setLabel('🔗 Verify YouTube Channel')
+        .setStyle(ButtonStyle.Primary)
+    );
 
     await interaction.reply({
-      content: 'Click the button below to verify your YouTube channel 👇',
-      components: [row],
-      ephemeral: true,
+      content: 'Click below to verify your YouTube channel!',
+      components: [verifyButton],
+      ephemeral: true
     });
   }
 };
+
+
