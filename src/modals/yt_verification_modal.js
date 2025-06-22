@@ -1,7 +1,7 @@
 // src/modals/yt_verification_modal.js
 import fs from 'fs';
 import path from 'path';
-import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
+import { commitYoutubeUsersFile } from '../utils/gitutils.js'; // ✅ fixed lowercase
 
 const filePath = path.join(process.cwd(), 'youtube-users.json');
 
