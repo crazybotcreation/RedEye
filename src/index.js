@@ -1,3 +1,4 @@
+// src/index.js
 import {
   Client,
   GatewayIntentBits,
@@ -12,7 +13,7 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
-import { commitYoutubeUsersFile } from './utils/gitutils.js'; // ✅ Corrected path
+import { commitYoutubeUsersFile } from './utils/gitUtils.js'; // ✅ Fixed import
 
 config();
 
@@ -99,7 +100,6 @@ client.once(Events.ClientReady, async () => {
   }
 });
 
-// Interaction handling
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
     if (interaction.isChatInputCommand()) {
@@ -117,11 +117,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Express server for keeping Render alive
+// Web server to keep bot alive
 const app = express();
 app.get('/', (_, res) => res.send('Bot is alive!'));
 app.listen(3000, () => {
   console.log('🌐 Listening on port 3000');
 });
 
-client.login(process.env.TOKEN)
+client.login(process.env.TOKEN);
