@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
-import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
+import { commitYoutubeUsersFile } from '../utils/gitutils.js'; // 🔧 fixed casing here
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
@@ -39,4 +39,4 @@ export default {
       ephemeral: true
     });
   }
-}
+};
