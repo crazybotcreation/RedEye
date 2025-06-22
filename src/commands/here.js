@@ -1,8 +1,7 @@
-// src/commands/here.js
 import fs from 'node:fs';
 import path from 'node:path';
 import { SlashCommandBuilder, ChannelType, PermissionFlagsBits } from 'discord.js';
-import { commitYoutubeUsersFile } from '../utils/gitutils.js'; // ✅ fixed lowercase "gitutils"
+import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ Correct casing!
 
 const dataPath = path.join(process.cwd(), 'youtube-users.json');
 
