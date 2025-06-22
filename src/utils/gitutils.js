@@ -1,30 +1,48 @@
 // src/utils/gitUtils.js
-import { execSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
+import simpleGit from 'simple-git';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
-const dataPath = path.join(process.cwd(), 'youtube-users.json');
+const REPO_URL = 'git@github.com:crazybotcreation/RedEye.git';
+const FILE_NAME = 'youtube-users.json';
 
-export function commitYoutubeUsersFile() {
+export async function commitYoutubeUsersFile() {
   try {
-    if (!fs.existsSync(dataPath)) {
-      console.warn('📂 youtube-users.json does not exist. Skipping commit.');
+    const repoPath = process.cwd();
+    const filePath = path.join(repoPath, FILE_NAME);
+
+    if (!fs.existsSync(filePath)) {
+      console.warn(`⚠️ ${FILE_NAME} not found, cannot commit.`);
       return;
     }
 
-    // Log file preview
-    const content = fs.readFileSync(dataPath, 'utf8');
-    console.log('📄 Commit Content Preview:', content);
+    // Write SSH key to temp file if provided
+    const privateKey = process.env.GIT_SSH_PRIVATE_KEY;
+    if (!privateKey) {
+      console.error('❌ GIT_SSH_PRIVATE_KEY not set in environment.');
+      return;
+    }
 
-    execSync('git config user.name "RedEye Bot"');
-    execSync('git config user.email "redeye@bot"');
+    const sshPath = '/tmp/temp_deploy_key';
+    fs.writeFileSync(sshPath, privateKey.replace(/\\n/g, '\n'), { mode: 0o600 });
 
-    execSync('git add youtube-users.json');
-    execSync('git commit -m "✅ Auto update youtube-users.json"');
-    execSync('git push origin main');
+    // Create custom SSH command
+    const GIT_SSH_COMMAND = `ssh -i ${sshPath} -o StrictHostKeyChecking=no`;
 
-    console.log('✅ Auto-committed youtube-users.json to GitHub');
+    const git = simpleGit({
+      baseDir: repoPath,
+      binary: 'git',
+      maxConcurrentProcesses: 1,
+      trimmed: false
+    });
+
+    await git.add(FILE_NAME);
+    await git.commit(`🔄 Auto update ${FILE_NAME}`);
+    await git.push(REPO_URL, 'main', { env: { GIT_SSH_COMMAND } });
+
+    console.log(`✅ ${FILE_NAME} committed and pushed to GitHub!`);
   } catch (err) {
-    console.error('❌ Git commit failed:', err.message);
+    console.error('❌ Git auto-commit failed:', err);
   }
-      }
+}
