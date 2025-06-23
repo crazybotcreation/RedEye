@@ -15,6 +15,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 import fetchAndPostLatestVideos from './utils/fetchVideos.js';
 import { commitYoutubeUsersFile } from './utils/gitutils.js';
+import { scheduleJob } from 'node-schedule';
 
 config();
 
@@ -100,10 +101,22 @@ client.once(Events.ClientReady, async () => {
     console.error('❌ Error deploying slash commands:', err);
   }
 
-  // 🔁 Start auto video fetcher
+  // 🔁 Start auto video fetcher every 60s
   setInterval(() => {
     fetchAndPostLatestVideos(client).catch(console.error);
   }, 60 * 1000);
+
+  // 🛡️ Daily backup of youtube-users.json
+  scheduleJob('0 0 * * *', () => {
+    const source = path.join(process.cwd(), 'youtube-users.json');
+    const backupName = `backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const destination = path.join(process.cwd(), backupName);
+
+    if (fs.existsSync(source)) {
+      fs.copyFileSync(source, destination);
+      console.log(`🛡️ Backup created: ${backupName}`);
+    }
+  });
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
