@@ -11,8 +11,12 @@ export function commitYoutubeUsersFile() {
     execSync('git config user.name "RedEyeBot"');
     execSync('git config user.email "redeye@bot.com"');
 
-    // Force correct SSH remote
-    execSync('git remote set-url origin git@github.com:crazybotcreation/RedEye.git');
+    // Add origin only if it doesn't exist
+    const remotes = execSync('git remote').toString().trim().split('\n');
+    if (!remotes.includes('origin')) {
+      execSync('git remote add origin git@github.com:crazybotcreation/RedEye.git');
+      console.log('🔗 Added remote origin for Render push.');
+    }
 
     // Stage file
     execSync(`git add ${filePath}`);
