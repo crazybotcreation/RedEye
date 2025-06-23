@@ -1,7 +1,7 @@
 // src/modals/yt_verification_modal.js
 import fs from 'fs';
 import path from 'path';
-import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ Correct capitalization
+import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
 
 const filePath = path.join(process.cwd(), 'youtube-users.json');
 
@@ -11,14 +11,13 @@ export default {
   async execute(interaction) {
     try {
       const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
-      const discordChannelId = interaction.fields.getTextInputValue('discordChannel')?.trim();
 
-      const youtubeChannelIdMatch = youtubeUrl.match(/(?:\/channel\/|\/@)?([a-zA-Z0-9_-]{24})/);
+      const youtubeChannelIdMatch = youtubeUrl.match(/(?:\/channel\/|\/@)([a-zA-Z0-9_-]+)/);
       const youtubeChannelId = youtubeChannelIdMatch?.[1];
 
-      if (!youtubeChannelId || !/^\d{17,19}$/.test(discordChannelId)) {
+      if (!youtubeChannelId) {
         return await interaction.reply({
-          content: '❌ Invalid YouTube URL or Discord Channel ID!',
+          content: '❌ Invalid YouTube URL format!',
           ephemeral: true
         });
       }
@@ -38,7 +37,6 @@ export default {
 
       data[userId] = {
         channelId: youtubeChannelId,
-        channel: discordChannelId,
         guild: guildId
       };
 
@@ -46,7 +44,7 @@ export default {
       commitYoutubeUsersFile();
 
       await interaction.reply({
-        content: `✅ You are now verified! RedEye will track <https://www.youtube.com/channel/${youtubeChannelId}>`,
+        content: `✅ You are now verified! RedEye will track https://www.youtube.com/@${youtubeChannelId}`,
         ephemeral: true
       });
     } catch (error) {
