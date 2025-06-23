@@ -13,7 +13,8 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
-import { commitYoutubeUsersFile } from './utils/gitutils.js'; // ✅ Fixed lowercase "u"
+import fetchAndPostLatestVideos from './utils/fetchVideos.js';
+import { commitYoutubeUsersFile } from './utils/gitutils.js';
 
 config();
 
@@ -98,6 +99,11 @@ client.once(Events.ClientReady, async () => {
   } catch (err) {
     console.error('❌ Error deploying slash commands:', err);
   }
+
+  // 🔁 Start auto video fetcher
+  setInterval(() => {
+    fetchAndPostLatestVideos(client).catch(console.error);
+  }, 60 * 1000);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
