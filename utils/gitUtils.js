@@ -1,35 +1,34 @@
-// src/utils/gitUtils.js
-import { exec } from 'child_process';
+// utils/gitUtils.js
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
 export function commitYoutubeUsersFile() {
   const filePath = path.join(process.cwd(), 'youtube-users.json');
 
-  exec('git config user.name "RedEyeBot"', (err) => {
-    if (err) return console.error('Git username config failed:', err);
+  try {
+    // Set Git author info (only once per session)
+    execSync('git config user.name "RedEyeBot"');
+    execSync('git config user.email "redeye@bot.com"');
 
-    exec('git config user.email "redeye@bot.com"', (err) => {
-      if (err) return console.error('Git email config failed:', err);
+    // Stage the file
+    execSync(`git add ${filePath}`);
 
-      exec(`git add ${filePath}`, (err) => {
-        if (err) return console.error('Git add failed:', err);
+    // Check if there are actual changes before committing
+    const diff = execSync('git diff --cached --name-only').toString().trim();
+    if (!diff.includes('youtube-users.json')) {
+      console.log('🟡 No changes in youtube-users.json — skipping commit.');
+      return;
+    }
 
-        exec('git commit -m "🔁 Update youtube-users.json"', (err) => {
-          if (err) {
-            if (err.message.includes('nothing to commit')) {
-              console.log('🟡 No changes to commit.');
-              return;
-            }
-            return console.error('Git commit failed:', err);
-          }
+    // Commit with timestamp
+    const timestamp = new Date().toISOString().replace('T', ' ').split('.')[0];
+    execSync(`git commit -m "🔁 Update youtube-users.json at ${timestamp}"`);
 
-          exec('git push origin main', (err) => {
-            if (err) return console.error('Git push failed:', err);
-            console.log('✅ youtube-users.json committed and pushed!');
-          });
-        });
-      });
-    });
-  });
+    // Push to GitHub
+    execSync('git push origin main');
+    console.log('✅ youtube-users.json committed and pushed!');
+  } catch (err) {
+    console.error('❌ Git operation failed:', err.message);
   }
+      }
