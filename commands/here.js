@@ -1,48 +1,37 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { SlashCommandBuilder, ChannelType, PermissionFlagsBits } from 'discord.js';
-import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ Correct casing!
+import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
-const dataPath = path.join(process.cwd(), 'youtube-users.json');
+const filePath = path.join(process.cwd(), 'youtube-users.json');
 
 export default {
   data: new SlashCommandBuilder()
     .setName('here')
-    .setDescription('Set this channel for RedEye to post your new videos.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
-    .setDMPermission(false)
-    .addChannelOption((option) =>
-      option
-        .setName('channel')
-        .setDescription('Where should RedEye post your new YouTube videos?')
-        .addChannelTypes(ChannelType.GuildText)
-        .setRequired(true)
-    ),
+    .setDescription('Set this channel as the bot’s post channel')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels), // Only admins
 
   async execute(interaction) {
     const userId = interaction.user.id;
-    const channel = interaction.options.getChannel('channel');
+    const guildId = interaction.guildId;
+    const channelId = interaction.channelId;
 
-    let users = {};
-    if (fs.existsSync(dataPath)) {
-      users = JSON.parse(fs.readFileSync(dataPath, 'utf8') || '{}');
+    let data = {};
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      data = raw ? JSON.parse(raw) : {};
     }
 
-    if (!users[userId]) {
-      return await interaction.reply({
-        content: '❌ You are not verified yet.',
-        ephemeral: true
-      });
+    // Apply new default channel to all users in this guild
+    for (const user of Object.keys(data)) {
+      if (data[user].guild === guildId) {
+        data[user].channel = channelId;
+      }
     }
 
-    users[userId].channel = channel.id;
-    users[userId].guild = interaction.guild.id;
-
-    fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
-    commitYoutubeUsersFile();
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
     await interaction.reply({
-      content: `✅ RedEye will now post your new videos in ${channel}.`,
+      content: `✅ Bot will now post videos in <#${channelId}>`,
       ephemeral: true
     });
   }
