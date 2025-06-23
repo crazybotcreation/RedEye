@@ -56,10 +56,15 @@ export default {
       });
     } catch (error) {
       console.error('❌ Verification failed:', error);
-      await interaction.reply({
-        content: '⚠️ Something went wrong during verification.',
-        ephemeral: true
-      });
+
+      try {
+        await interaction.reply({
+          content: '⚠️ Something went wrong during verification.',
+          ephemeral: true
+        });
+      } catch (replyError) {
+        console.error('❌ Interaction already acknowledged:', replyError.message);
+      }
     }
   }
 };
