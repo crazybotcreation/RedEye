@@ -1,4 +1,4 @@
-// src/index.js
+// index.js
 import {
   Client,
   GatewayIntentBits,
@@ -34,7 +34,7 @@ client.buttons = new Collection();
 client.modals = new Collection();
 
 // Load commands
-const commandsPath = path.join(process.cwd(), 'src/commands');
+const commandsPath = path.join(process.cwd(), 'commands');
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs
     .readdirSync(commandsPath)
@@ -52,7 +52,7 @@ if (fs.existsSync(commandsPath)) {
 }
 
 // Load buttons
-const buttonsPath = path.join(process.cwd(), 'src/buttons');
+const buttonsPath = path.join(process.cwd(), 'buttons');
 if (fs.existsSync(buttonsPath)) {
   const buttonFiles = fs
     .readdirSync(buttonsPath)
@@ -68,7 +68,7 @@ if (fs.existsSync(buttonsPath)) {
 }
 
 // Load modals
-const modalsPath = path.join(process.cwd(), 'src/modals');
+const modalsPath = path.join(process.cwd(), 'modals');
 if (fs.existsSync(modalsPath)) {
   const modalFiles = fs
     .readdirSync(modalsPath)
