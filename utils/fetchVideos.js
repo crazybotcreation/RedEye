@@ -65,3 +65,4 @@ async function getLatestVideo(channelId) {
     title: item.snippet.title,
     thumbnail: item.snippet.thumbnails.high.url
   };
+      }
