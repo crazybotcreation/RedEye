@@ -42,7 +42,12 @@ export default {
         guild: guildId
       };
 
+      console.log('📁 Writing to:', filePath);
+      console.log('📝 Data to save:', data);
+
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+      console.log('📤 Calling commitYoutubeUsersFile...');
       commitYoutubeUsersFile();
 
       await interaction.reply({
