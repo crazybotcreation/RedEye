@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 import fetchAndPostLatestVideos from './utils/fetchVideos.js';
-import { commitYoutubeUsersFile } from './utils/gitutils.js';
+import { commitYoutubeUsersFile } from './utils/gitUtils.js';
 import { scheduleJob } from 'node-schedule';
 
 config();
@@ -143,4 +143,4 @@ app.listen(3000, () => {
   console.log('🌐 Listening on port 3000');
 });
 
-client.login(process.env.TOKEN)
+client.login(process.env.TOKEN);
