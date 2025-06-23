@@ -1,3 +1,4 @@
+// src/modals/yt_verification_modal.js
 import fs from 'fs';
 import path from 'path';
 import { commitYoutubeUsersFile } from '../utils/gitUtils.js'; // ✅ Correct capitalization
@@ -56,4 +57,4 @@ export default {
       });
     }
   }
-    
+}; // 🛠️ <-- THIS WAS MISSING
