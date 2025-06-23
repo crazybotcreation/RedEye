@@ -13,7 +13,7 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
-import { commitYoutubeUsersFile } from './utils/gitUtils.js'; // ✅ Fixed import
+import { commitYoutubeUsersFile } from './utils/gitutils.js'; // ✅ Fixed lowercase "u"
 
 config();
 
@@ -124,4 +124,4 @@ app.listen(3000, () => {
   console.log('🌐 Listening on port 3000');
 });
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN)
