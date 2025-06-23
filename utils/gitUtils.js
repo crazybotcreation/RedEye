@@ -8,9 +8,6 @@ export function commitYoutubeUsersFile() {
   try {
     console.log('📁 Writing to:', filePath);
 
-    // Write JSON file (optional if you're not doing it here)
-    // fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-
     const data = fs.readFileSync(filePath, 'utf-8');
     console.log('📝 Data to save:', data);
 
@@ -18,6 +15,9 @@ export function commitYoutubeUsersFile() {
     console.log('⚙️ Setting Git config...');
     execSync('git config user.name "RedEyeBot"');
     execSync('git config user.email "redeye@bot.com"');
+
+    // 🛡️ FIX: Trust GitHub host
+    execSync(`mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts`);
 
     // Ensure remote 'origin' exists or create it
     const remotes = execSync('git remote').toString().trim().split('\n');
@@ -50,4 +50,4 @@ export function commitYoutubeUsersFile() {
   } catch (err) {
     console.error('❌ Git operation failed:', err.message);
   }
-}
+  }
