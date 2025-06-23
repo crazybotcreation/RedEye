@@ -11,26 +11,20 @@ export default {
   async execute(interaction) {
     try {
       const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
+
+      const youtubeChannelIdMatch = youtubeUrl.match(/(?:\/channel\/|\/@)([a-zA-Z0-9_-]{1,})/);
+      const youtubeChannelId = youtubeChannelIdMatch?.[1];
+
+      if (!youtubeChannelId) {
+        return await interaction.reply({
+          content: '❌ Invalid YouTube Channel URL!',
+          ephemeral: true
+        });
+      }
+
       const userId = interaction.user.id;
       const guildId = interaction.guildId;
-
-      if (!youtubeUrl) {
-        return await interaction.reply({
-          content: '❌ You must provide a YouTube channel URL.',
-          ephemeral: true,
-        });
-      }
-
-      // Extract the handle or channel ID
-      const match = youtubeUrl.match(/youtube\.com\/(@[a-zA-Z0-9_-]+|channel\/[a-zA-Z0-9_-]+)/);
-      if (!match) {
-        return await interaction.reply({
-          content: '❌ Please enter a valid YouTube channel URL like:\nhttps://youtube.com/@yourchannel',
-          ephemeral: true,
-        });
-      }
-
-      const channelRef = match[1];
+      const channelId = interaction.channelId;
 
       let data = {};
       if (fs.existsSync(filePath)) {
@@ -38,12 +32,13 @@ export default {
           const raw = fs.readFileSync(filePath, 'utf-8');
           data = raw ? JSON.parse(raw) : {};
         } catch (err) {
-          console.error('❌ Failed to read youtube-users.json:', err);
+          console.error('❌ Error reading youtube-users.json:', err);
         }
       }
 
       data[userId] = {
-        channelId: channelRef,
+        channelId: youtubeChannelId,
+        channel: channelId,
         guild: guildId
       };
 
@@ -51,15 +46,15 @@ export default {
       commitYoutubeUsersFile();
 
       await interaction.reply({
-        content: `✅ You are now verified! RedEye will track **https://youtube.com/${channelRef}**`,
-        ephemeral: true,
+        content: `✅ You are now verified! RedEye will track https://youtube.com/@${youtubeChannelId}`,
+        ephemeral: true
       });
     } catch (error) {
       console.error('❌ Verification failed:', error);
       await interaction.reply({
-        content: '⚠️ Something went wrong during verification. Please try again later.',
-        ephemeral: true,
+        content: '⚠️ Something went wrong during verification.',
+        ephemeral: true
       });
     }
-  },
-};
+  }
+}
