@@ -1,4 +1,3 @@
-// src/modals/yt_verification_modal.js
 import fs from 'fs';
 import path from 'path';
 import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
@@ -10,15 +9,15 @@ export default {
 
   async execute(interaction) {
     try {
-      const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
+      await interaction.deferReply({ ephemeral: true }); // ✅ Defers the interaction properly
 
+      const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
       const youtubeChannelIdMatch = youtubeUrl.match(/(?:\/channel\/|\/@)([a-zA-Z0-9_-]{1,})/);
       const youtubeChannelId = youtubeChannelIdMatch?.[1];
 
       if (!youtubeChannelId) {
-        return await interaction.reply({
-          content: '❌ Invalid YouTube Channel URL!',
-          ephemeral: true
+        return await interaction.editReply({
+          content: '❌ Invalid YouTube Channel URL!'
         });
       }
 
@@ -50,18 +49,24 @@ export default {
       console.log('📤 Calling commitYoutubeUsersFile...');
       commitYoutubeUsersFile();
 
-      await interaction.reply({
-        content: `✅ You are now verified! RedEye will track https://youtube.com/@${youtubeChannelId}`,
-        ephemeral: true
+      await interaction.editReply({
+        content: `✅ You are now verified! RedEye will track https://youtube.com/@${youtubeChannelId}`
       });
+
     } catch (error) {
       console.error('❌ Verification failed:', error);
 
       try {
-        await interaction.reply({
-          content: '⚠️ Something went wrong during verification.',
-          ephemeral: true
-        });
+        if (interaction.deferred || interaction.replied) {
+          await interaction.editReply({
+            content: '⚠️ Something went wrong during verification.'
+          });
+        } else {
+          await interaction.reply({
+            content: '⚠️ Something went wrong during verification.',
+            ephemeral: true
+          });
+        }
       } catch (replyError) {
         console.error('❌ Interaction already acknowledged:', replyError.message);
       }
