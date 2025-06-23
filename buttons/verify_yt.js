@@ -14,20 +14,7 @@ export default {
               custom_id: 'youtubeLink',
               style: 1,
               label: 'Enter your YouTube Channel URL',
-              placeholder: 'https://youtube.com/channel/...',
-              required: true
-            }
-          ]
-        },
-        {
-          type: 1,
-          components: [
-            {
-              type: 4,
-              custom_id: 'discordChannel',
-              style: 1,
-              label: 'Enter your Discord Channel ID',
-              placeholder: '123456789012345678',
+              placeholder: 'https://youtube.com/@yourchannel',
               required: true
             }
           ]
