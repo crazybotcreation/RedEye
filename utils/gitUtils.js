@@ -5,10 +5,14 @@ import path from 'path';
 
 export async function commitYoutubeUsersFile() {
   const filePath = 'youtube-users.json';
+
+  // 🔧 Read and force-write with newline to ensure Git sees change
   const content = fs.readFileSync(filePath, 'utf-8');
+  const updatedContent = content.trim() + '\n';
+  fs.writeFileSync(filePath, updatedContent);
 
   console.log(`📁 Writing to: ${filePath}`);
-  console.log(`📝 Data to save: ${content}`);
+  console.log(`📝 Data to save: ${updatedContent}`);
 
   try {
     // Step 1: Git config
