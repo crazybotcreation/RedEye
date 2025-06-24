@@ -56,7 +56,8 @@ export default {
       data[userId] = {
         channelId: youtubeChannelId,
         channel: channelId,
-        guild: guildId
+        guild: guildId,
+        ts: Date.now() // 🧠 Force Git change every time
       };
 
       console.log('📁 [Step 7] Writing updated data to file:', filePath);
