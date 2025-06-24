@@ -1,57 +1,36 @@
-import { execSync } from 'child_process';
+// utils/gitUtils.js
 import fs from 'fs';
-import path from 'path';
+import { execSync } from 'child_process';
 
-export function commitYoutubeUsersFile() {
-  const filePath = path.join(process.cwd(), 'youtube-users.json');
+export async function commitYoutubeUsersFile() {
+  const filePath = 'youtube-users.json';
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  console.log(`📁 Writing to: ${filePath}`);
+  console.log(`📝 Data to save: ${content}`);
 
   try {
-    console.log('📁 Writing to:', filePath);
+    // Step 1: Git config
+    execSync('git config --global user.email "bot@redeye.app"');
+    execSync('git config --global user.name "RedEye Bot"');
 
-    const data = fs.readFileSync(filePath, 'utf-8');
-    console.log('📝 Data to save:', data);
-
-    // 🔐 Get GitHub token
+    // Step 2: GitHub Token (from environment)
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
-      throw new Error('GITHUB_TOKEN is not set in environment variables.');
+      throw new Error('GITHUB_TOKEN not found in environment variables.');
     }
 
-    // ⚙️ Set Git identity
-    console.log('⚙️ Setting Git config...');
-    execSync('git config user.name "RedEyeBot"');
-    execSync('git config user.email "redeye@bot.com"');
+    const repoURL = `https://crazybotcreation:${token}@github.com/crazybotcreation/RedEye.git`;
 
-    // 🔗 Ensure remote is set to HTTPS with token
-    const remoteUrl = `https://${token}:x-oauth-basic@github.com/crazybotcreation/RedEye.git`;
-    const remotes = execSync('git remote').toString().trim().split('\n');
-    if (!remotes.includes('origin')) {
-      console.log('🔗 Adding HTTPS remote with token...');
-      execSync(`git remote add origin "${remoteUrl}"`);
-    } else {
-      console.log('🔗 Updating HTTPS remote with token...');
-      execSync(`git remote set-url origin "${remoteUrl}"`);
-    }
+    execSync(`git remote remove origin || true`);
+    execSync(`git remote add origin ${repoURL}`);
 
-    // ➕ Stage file
-    execSync(`git add ${filePath}`);
-
-    // 🧠 Check for changes
-    const diff = execSync('git diff --cached --name-only').toString().trim();
-    console.log('🔍 Git diff result:', diff || '[no changes]');
-    if (!diff.includes('youtube-users.json')) {
-      console.log('🟡 No changes in youtube-users.json — skipping commit.');
-      return;
-    }
-
-    // 📝 Commit with timestamp
-    const timestamp = new Date().toISOString().replace('T', ' ').split('.')[0];
-    execSync(`git commit -m "🔁 Update youtube-users.json at ${timestamp}"`);
-
-    // 🚀 Push
+    // Step 3: Commit and Push
+    execSync('git add youtube-users.json');
+    execSync('git commit -m "🔄 Update youtube-users.json" --allow-empty');
     execSync('git push origin main');
+
     console.log('✅ youtube-users.json committed and pushed!');
   } catch (err) {
-    console.error('❌ Git operation failed:', err.message);
+    console.error('❌ Git push failed:', err.message);
   }
-}
