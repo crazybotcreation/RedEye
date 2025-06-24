@@ -13,6 +13,8 @@ export default {
 
   async execute(interaction) {
     try {
+      await interaction.deferReply({ flags: 64 }); // 🔧 Fix added
+
       const userId = interaction.user.id;
       const guildId = interaction.guildId;
       const channelId = interaction.channelId;
@@ -31,9 +33,8 @@ export default {
 
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
-      await interaction.reply({
-        content: `✅ Bot will now post videos in <#${channelId}>`,
-        flags: 64 // replaces ephemeral: true
+      await interaction.editReply({ // 🔧 Changed to editReply
+        content: `✅ Bot will now post videos in <#${channelId}>`
       });
     } catch (error) {
       console.error('❌ [here] Command failed:', error.message);
