@@ -49,6 +49,10 @@ export default {
         }
       }
 
+      if (data[userId]) {
+        console.log(`🔁 [Step 6.1] Updating existing entry for user ${userId}`);
+      }
+
       data[userId] = {
         channelId: youtubeChannelId,
         channel: channelId,
@@ -89,4 +93,4 @@ export default {
       }
     }
   }
-}
+};
