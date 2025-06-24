@@ -13,17 +13,18 @@ export default {
 
   async execute(interaction) {
     try {
-      await interaction.reply({
+      await interaction.deferReply({ flags: 64 }); // 🔧 Fix added
+
+      const verifyButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('verify_yt')
+          .setLabel('🔗 Verify YouTube Channel')
+          .setStyle(ButtonStyle.Primary)
+      );
+
+      await interaction.editReply({ // 🔧 Changed to editReply
         content: 'Click below to verify your YouTube channel!',
-        components: [
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId('verify_yt')
-              .setLabel('🔗 Verify YouTube Channel')
-              .setStyle(ButtonStyle.Primary)
-          )
-        ],
-        flags: 64 // use flags instead of ephemeral
+        components: [verifyButton]
       });
     } catch (error) {
       console.error('❌ [getredeye] Failed:', error.message);
