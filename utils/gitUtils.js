@@ -1,3 +1,4 @@
+// utils/gitUtils.js
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -16,10 +17,13 @@ export function commitYoutubeUsersFile() {
     execSync('git config user.name "RedEyeBot"');
     execSync('git config user.email "redeye@bot.com"');
 
-    // 🛡️ FIX: Trust GitHub host
-    execSync(`mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts`);
+    // 🛡️ Trust GitHub host
+    execSync('mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts');
 
-    // Ensure remote 'origin' exists or create it
+    // Ensure Git uses the correct private key
+    process.env.GIT_SSH_COMMAND = 'ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes';
+
+    // Ensure remote 'origin' exists or recreate it
     const remotes = execSync('git remote').toString().trim().split('\n');
     if (!remotes.includes('origin')) {
       console.log('🔗 Adding Git remote origin...');
@@ -34,7 +38,7 @@ export function commitYoutubeUsersFile() {
 
     // Check if there's a diff
     const diff = execSync('git diff --cached --name-only').toString().trim();
-    console.log('🔍 Git diff result:', diff);
+    console.log('🔍 Git diff result:', diff || '[no changes]');
     if (!diff.includes('youtube-users.json')) {
       console.log('🟡 No changes in youtube-users.json — skipping commit.');
       return;
@@ -50,4 +54,4 @@ export function commitYoutubeUsersFile() {
   } catch (err) {
     console.error('❌ Git operation failed:', err.message);
   }
-  }
+}
