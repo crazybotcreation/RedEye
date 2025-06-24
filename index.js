@@ -31,6 +31,18 @@ try {
 
   if (isMissing || isEmpty) {
     console.log('🌩️ [Soul Sync] Missing or empty soul, pulling from GitHub...');
+
+    const configPath = path.join(process.cwd(), '.git/config');
+    const token = process.env.GITHUB_TOKEN;
+    const repoURL = `https://crazybotcreation:${token}@github.com/crazybotcreation/RedEye.git`;
+
+    if (!fs.existsSync(configPath) || !fs.readFileSync(configPath, 'utf8').includes('origin')) {
+      console.log('🔧 [Soul Sync] Git origin missing, re-adding...');
+      execSync('git init');
+      execSync('git remote remove origin || true');
+      execSync(`git remote add origin ${repoURL}`);
+    }
+
     execSync('git pull origin main');
     console.log('✅ [Soul Sync] Pulled latest soul (youtube-users.json)');
   }
