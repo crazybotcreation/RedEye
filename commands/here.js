@@ -33,8 +33,7 @@ export default {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
     await interaction.editReply({
-      content: `✅ Bot will now post videos in <#${channelId}>`,
-      flags: 64
+      content: `✅ Bot will now post videos in <#${channelId}>`
     });
   }
 };
