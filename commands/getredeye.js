@@ -1,5 +1,9 @@
-// src/commands/getredeye.js
-import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} from 'discord.js';
 
 export default {
   data: new SlashCommandBuilder()
@@ -7,6 +11,8 @@ export default {
     .setDescription('Get the RedEye YouTube verification panel'),
 
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true }); // ✅ Avoids interaction timeout
+
     const verifyButton = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('verify_yt')
@@ -14,12 +20,9 @@ export default {
         .setStyle(ButtonStyle.Primary)
     );
 
-    await interaction.reply({
+    await interaction.editReply({
       content: 'Click below to verify your YouTube channel!',
-      components: [verifyButton],
-      ephemeral: true
+      components: [verifyButton]
     });
   }
 };
-
-
