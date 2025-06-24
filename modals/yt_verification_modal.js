@@ -10,8 +10,8 @@ export default {
 
   async execute(interaction) {
     try {
+      await interaction.deferReply({ ephemeral: true }); // ✅ Defer FIRST to avoid 40060 error
       console.log(`📨 Modal submitted by ${interaction.user?.id} in guild ${interaction.guildId}`);
-      await interaction.deferReply({ ephemeral: true }); // ✅ Defers the interaction properly
 
       const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
       const youtubeChannelIdMatch = youtubeUrl.match(/(?:\/channel\/|\/@)([a-zA-Z0-9_-]{1,})/);
@@ -75,4 +75,4 @@ export default {
       }
     }
   }
-}
+}        
