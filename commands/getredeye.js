@@ -13,7 +13,7 @@ export default {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply({ flags: 64 }); // 🔧 Fix added
+      await interaction.deferReply({ flags: 64 }); // 🛠️ Fix interaction timeout
 
       const verifyButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -22,12 +22,12 @@ export default {
           .setStyle(ButtonStyle.Primary)
       );
 
-      await interaction.editReply({ // 🔧 Changed to editReply
+      await interaction.editReply({
         content: 'Click below to verify your YouTube channel!',
         components: [verifyButton]
       });
-    } catch (error) {
-      console.error('❌ [getredeye] Failed:', error.message);
+    } catch (err) {
+      console.error('❌ [getredeye] Failed:', err.message);
     }
   }
 };
