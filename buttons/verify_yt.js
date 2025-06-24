@@ -1,30 +1,35 @@
 // src/buttons/verify_yt.js
+import {
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder
+} from 'discord.js';
+
 export default {
   id: 'verify_yt',
+
   async execute(interaction) {
     try {
       console.log(`🔘 [verify_yt] Button clicked by ${interaction.user?.id}`);
 
-      // ✅ Show the modal directly without deferring
-      await interaction.showModal({
-        custom_id: 'yt_verification_modal',
-        title: 'YouTube Verification',
-        components: [
-          {
-            type: 1,
-            components: [
-              {
-                type: 4,
-                custom_id: 'youtubeLink',
-                style: 1,
-                label: 'Enter your YouTube Channel URL',
-                placeholder: 'https://youtube.com/@yourchannel',
-                required: true
-              }
-            ]
-          }
-        ]
-      });
+      // ✅ Construct modal using Discord.js builder API
+      const modal = new ModalBuilder()
+        .setCustomId('yt_verification_modal')
+        .setTitle('YouTube Verification');
+
+      const youtubeInput = new TextInputBuilder()
+        .setCustomId('youtubeLink')
+        .setLabel('Enter your YouTube Channel URL')
+        .setPlaceholder('https://youtube.com/@yourchannel')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const row = new ActionRowBuilder().addComponents(youtubeInput);
+      modal.addComponents(row);
+
+      // ✅ Show modal (no defer/reply before this)
+      await interaction.showModal(modal);
 
     } catch (error) {
       console.error('❌ Failed to show modal:', error.message);
