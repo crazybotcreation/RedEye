@@ -11,7 +11,7 @@ export default {
   async execute(interaction) {
     try {
       console.log('🪝 [Step 1] Modal execution triggered');
-      await interaction.deferReply({ flags: 64 }); // ✅ Replaced ephemeral: true
+      await interaction.deferReply({ flags: 64 }); // ✅ Updated to use flags
       console.log(`✅ [Step 2] Interaction deferred by ${interaction.user?.id} in guild ${interaction.guildId}`);
 
       const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
@@ -84,4 +84,4 @@ export default {
       }
     }
   }
-    
+};
