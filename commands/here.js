@@ -11,8 +11,6 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels), // Only admins
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
-
     const userId = interaction.user.id;
     const guildId = interaction.guildId;
     const channelId = interaction.channelId;
@@ -23,7 +21,6 @@ export default {
       data = raw ? JSON.parse(raw) : {};
     }
 
-    // Apply new default channel to all users in this guild
     for (const user of Object.keys(data)) {
       if (data[user].guild === guildId) {
         data[user].channel = channelId;
@@ -32,8 +29,9 @@ export default {
 
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
-    await interaction.editReply({
-      content: `✅ Bot will now post videos in <#${channelId}>`
+    await interaction.reply({
+      content: `✅ Bot will now post videos in <#${channelId}>`,
+      flags: 64
     });
   }
 };
