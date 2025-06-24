@@ -1,4 +1,3 @@
-// utils/gitUtils.js
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -12,39 +11,26 @@ export function commitYoutubeUsersFile() {
     const data = fs.readFileSync(filePath, 'utf-8');
     console.log('📝 Data to save:', data);
 
-    // 🔑 Write SSH private key from environment to file
-    const rawKey = process.env.GIT_SSH_PRIVATE_KEY;
-    if (!rawKey) {
-      throw new Error('GIT_SSH_PRIVATE_KEY is not set in environment variables.');
+    // 🔐 Get GitHub token
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+      throw new Error('GITHUB_TOKEN is not set in environment variables.');
     }
-
-    const formattedKey = rawKey
-      .replace(/\\n/g, '\n') // support \n in .env
-      .replace(/-----BEGIN [^-]+-----/, match => `\n${match}\n`)
-      .replace(/-----END [^-]+-----/, match => `\n${match}\n`)
-      .trim();
-
-    const keyPath = '/tmp/github_key';
-    fs.writeFileSync(keyPath, formattedKey, { mode: 0o600 });
-
-    process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o IdentitiesOnly=yes`;
 
     // ⚙️ Set Git identity
     console.log('⚙️ Setting Git config...');
     execSync('git config user.name "RedEyeBot"');
     execSync('git config user.email "redeye@bot.com"');
 
-    // 🛡️ Trust GitHub host
-    execSync('mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts');
-
-    // 🔗 Ensure remote is set
+    // 🔗 Ensure remote is set to HTTPS with token
+    const remoteUrl = `https://${token}:x-oauth-basic@github.com/crazybotcreation/RedEye.git`;
     const remotes = execSync('git remote').toString().trim().split('\n');
     if (!remotes.includes('origin')) {
-      console.log('🔗 Adding Git remote origin...');
-      execSync('git remote add origin git@github.com:crazybotcreation/RedEye.git');
+      console.log('🔗 Adding HTTPS remote with token...');
+      execSync(`git remote add origin "${remoteUrl}"`);
     } else {
-      console.log('🔗 Setting Git remote...');
-      execSync('git remote set-url origin git@github.com:crazybotcreation/RedEye.git');
+      console.log('🔗 Updating HTTPS remote with token...');
+      execSync(`git remote set-url origin "${remoteUrl}"`);
     }
 
     // ➕ Stage file
