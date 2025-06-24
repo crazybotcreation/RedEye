@@ -10,6 +10,7 @@ export default {
 
   async execute(interaction) {
     try {
+      console.log(`📨 Modal submitted by ${interaction.user?.id} in guild ${interaction.guildId}`);
       await interaction.deferReply({ ephemeral: true }); // ✅ Defers the interaction properly
 
       const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
@@ -17,6 +18,7 @@ export default {
       const youtubeChannelId = youtubeChannelIdMatch?.[1];
 
       if (!youtubeChannelId) {
+        console.log('❌ Invalid YouTube link:', youtubeUrl);
         return await interaction.editReply({
           content: '❌ Invalid YouTube Channel URL!'
         });
@@ -48,7 +50,7 @@ export default {
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
       console.log('📤 Calling commitYoutubeUsersFile...');
-      commitYoutubeUsersFile();
+      await commitYoutubeUsersFile();
 
       await interaction.editReply({
         content: `✅ You are now verified! RedEye will track https://youtube.com/@${youtubeChannelId}`
@@ -69,8 +71,8 @@ export default {
           });
         }
       } catch (replyError) {
-        console.error('❌ Interaction already acknowledged:', replyError.message);
+        console.error('❌ Interaction already acknowledged or failed to reply:', replyError.message);
       }
     }
   }
-};
+}
