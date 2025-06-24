@@ -1,4 +1,4 @@
-// index.js
+// src/index.js
 import {
   Client,
   GatewayIntentBits,
@@ -13,6 +13,7 @@ import { config } from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process'; // 🔧 Needed for Soul Sync
 import fetchAndPostLatestVideos from './utils/fetchVideos.js';
 import { commitYoutubeUsersFile } from './utils/gitUtils.js';
 import { scheduleJob } from 'node-schedule';
@@ -21,6 +22,21 @@ config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// 🌩️ Soul Resurrection: Pull latest `youtube-users.json` if missing or empty
+try {
+  const soulFile = path.join(process.cwd(), 'youtube-users.json');
+  const isMissing = !fs.existsSync(soulFile);
+  const isEmpty = fs.existsSync(soulFile) && fs.readFileSync(soulFile, 'utf-8').trim() === '{}';
+
+  if (isMissing || isEmpty) {
+    console.log('🌩️ [Soul Sync] Missing or empty soul, pulling from GitHub...');
+    execSync('git pull origin main');
+    console.log('✅ [Soul Sync] Pulled latest soul (youtube-users.json)');
+  }
+} catch (err) {
+  console.error('❌ [Soul Sync] GitHub pull failed:', err.message);
+}
 
 const client = new Client({
   intents: [
@@ -143,4 +159,4 @@ app.listen(3000, () => {
   console.log('🌐 Listening on port 3000');
 });
 
-client.login(process.env.TOKEN)
+client.login(process.env.TOKEN);
