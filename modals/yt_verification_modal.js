@@ -9,9 +9,14 @@ export default {
   id: 'yt_verification_modal',
 
   async execute(interaction) {
+    let deferred = false;
+
     try {
       console.log('🪝 [Step 1] Modal execution triggered');
-      await interaction.deferReply({ flags: 64 }); // ✅ Updated to use flags
+
+      // 🧠 Defer reply quickly to avoid timeout
+      await interaction.deferReply({ flags: 64 });
+      deferred = true;
       console.log(`✅ [Step 2] Interaction deferred by ${interaction.user?.id} in guild ${interaction.guildId}`);
 
       const youtubeUrl = interaction.fields.getTextInputValue('youtubeLink')?.trim();
@@ -67,7 +72,7 @@ export default {
       console.error('❌ [Step 10] Verification process threw an error:', error);
 
       try {
-        if (interaction.deferred || interaction.replied) {
+        if (deferred || interaction.deferred || interaction.replied) {
           console.log('⚠️ [Step 11] Editing deferred/replied interaction');
           await interaction.editReply({
             content: '⚠️ Something went wrong during verification.'
@@ -76,7 +81,7 @@ export default {
           console.log('⚠️ [Step 11] Replying fresh to interaction');
           await interaction.reply({
             content: '⚠️ Something went wrong during verification.',
-            flags: 64 // ✅ Replaced ephemeral: true
+            flags: 64
           });
         }
       } catch (replyError) {
