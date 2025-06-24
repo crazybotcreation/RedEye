@@ -1,4 +1,3 @@
-// modals/yt_verification_modal.js
 import fs from 'fs';
 import path from 'path';
 import { commitYoutubeUsersFile } from '../utils/gitUtils.js';
@@ -15,7 +14,7 @@ export default {
       console.log('🪝 [Step 1] Modal execution triggered');
 
       // 🧠 Defer reply quickly to avoid timeout
-      await interaction.deferReply({ flags: 64 });
+      await interaction.deferReply({ ephemeral: true });
       deferred = true;
       console.log(`✅ [Step 2] Interaction deferred by ${interaction.user?.id} in guild ${interaction.guildId}`);
 
@@ -81,12 +80,6 @@ export default {
           console.log('⚠️ [Step 11] Editing deferred/replied interaction');
           await interaction.editReply({
             content: '⚠️ Something went wrong during verification.'
-          });
-        } else {
-          console.log('⚠️ [Step 11] Replying fresh to interaction');
-          await interaction.reply({
-            content: '⚠️ Something went wrong during verification.',
-            flags: 64
           });
         }
       } catch (replyError) {
