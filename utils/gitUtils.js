@@ -12,17 +12,24 @@ export function commitYoutubeUsersFile() {
     const data = fs.readFileSync(filePath, 'utf-8');
     console.log('📝 Data to save:', data);
 
-    // 🔑 Write SSH key from .env to /tmp/github_key
-    const privateKey = process.env.GIT_SSH_PRIVATE_KEY;
-    if (!privateKey) {
+    // 🔑 Write SSH private key from environment to file
+    const rawKey = process.env.GIT_SSH_PRIVATE_KEY;
+    if (!rawKey) {
       throw new Error('GIT_SSH_PRIVATE_KEY is not set in environment variables.');
     }
 
+    const formattedKey = rawKey
+      .replace(/\\n/g, '\n') // support \n in .env
+      .replace(/-----BEGIN [^-]+-----/, match => `\n${match}\n`)
+      .replace(/-----END [^-]+-----/, match => `\n${match}\n`)
+      .trim();
+
     const keyPath = '/tmp/github_key';
-    fs.writeFileSync(keyPath, privateKey, { mode: 0o600 });
+    fs.writeFileSync(keyPath, formattedKey, { mode: 0o600 });
+
     process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o IdentitiesOnly=yes`;
 
-    // ⚙️ Git identity config
+    // ⚙️ Set Git identity
     console.log('⚙️ Setting Git config...');
     execSync('git config user.name "RedEyeBot"');
     execSync('git config user.email "redeye@bot.com"');
@@ -30,7 +37,7 @@ export function commitYoutubeUsersFile() {
     // 🛡️ Trust GitHub host
     execSync('mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts');
 
-    // 🔗 Add or update remote
+    // 🔗 Ensure remote is set
     const remotes = execSync('git remote').toString().trim().split('\n');
     if (!remotes.includes('origin')) {
       console.log('🔗 Adding Git remote origin...');
@@ -61,4 +68,4 @@ export function commitYoutubeUsersFile() {
   } catch (err) {
     console.error('❌ Git operation failed:', err.message);
   }
-    }
+               
