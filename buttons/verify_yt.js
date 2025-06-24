@@ -5,7 +5,7 @@ export default {
     try {
       console.log(`🔘 [verify_yt] Button clicked by ${interaction.user?.id}`);
 
-      // ✅ Prevent "Unknown interaction" error
+      // ✅ Safely acknowledge the interaction to prevent errors
       await interaction.deferUpdate();
 
       await interaction.showModal({
@@ -27,6 +27,7 @@ export default {
           }
         ]
       });
+
     } catch (error) {
       console.error('❌ Failed to show modal:', error.message);
 
