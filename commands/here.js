@@ -13,7 +13,7 @@ export default {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply({ flags: 64 }); // 🔧 Fix added
+      await interaction.deferReply({ flags: 64 }); // 🛠️ Prevent timeout
 
       const userId = interaction.user.id;
       const guildId = interaction.guildId;
@@ -33,11 +33,11 @@ export default {
 
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
-      await interaction.editReply({ // 🔧 Changed to editReply
+      await interaction.editReply({
         content: `✅ Bot will now post videos in <#${channelId}>`
       });
-    } catch (error) {
-      console.error('❌ [here] Command failed:', error.message);
+    } catch (err) {
+      console.error('❌ [here] Command failed:', err.message);
     }
   }
 };
