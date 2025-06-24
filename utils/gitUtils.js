@@ -25,7 +25,7 @@ export async function commitYoutubeUsersFile() {
 
     const repoURL = `https://crazybotcreation:${token}@github.com/crazybotcreation/RedEye.git`;
 
-    // Step 3: Reset origin safely (only if needed)
+    // Step 3: Reset origin safely (ignore if not exists)
     try {
       execSync('git remote remove origin');
     } catch (e) {
@@ -43,3 +43,4 @@ export async function commitYoutubeUsersFile() {
   } catch (err) {
     console.error('❌ Git push failed:', err.message);
   }
+}
