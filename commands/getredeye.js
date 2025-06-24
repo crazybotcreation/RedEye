@@ -1,4 +1,4 @@
-// src/commands/getredeye.js
+// commands/getredeye.js
 import {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -12,19 +12,21 @@ export default {
     .setDescription('Get the RedEye YouTube verification panel'),
 
   async execute(interaction) {
-    await interaction.deferReply({ flags: 64 }); // 🚫 No deprecated ephemeral warning
-
-    const verifyButton = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('verify_yt')
-        .setLabel('🔗 Verify YouTube Channel')
-        .setStyle(ButtonStyle.Primary)
-    );
-
-    await interaction.editReply({
-      content: 'Click below to verify your YouTube channel!',
-      components: [verifyButton],
-      flags: 64 // Optional here too for clarity
-    });
+    try {
+      await interaction.reply({
+        content: 'Click below to verify your YouTube channel!',
+        components: [
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId('verify_yt')
+              .setLabel('🔗 Verify YouTube Channel')
+              .setStyle(ButtonStyle.Primary)
+          )
+        ],
+        flags: 64 // use flags instead of ephemeral
+      });
+    } catch (error) {
+      console.error('❌ [getredeye] Failed:', error.message);
+    }
   }
 };
