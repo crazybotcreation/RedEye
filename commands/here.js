@@ -1,3 +1,4 @@
+// src/commands/here.js
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +9,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName('here')
     .setDescription('Set this channel as the bot’s post channel')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels), // Only admins
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
   async execute(interaction) {
     const userId = interaction.user.id;
@@ -31,7 +32,7 @@ export default {
 
     await interaction.reply({
       content: `✅ Bot will now post videos in <#${channelId}>`,
-      flags: 64
+      flags: 64 // ✅ Replaces deprecated ephemeral
     });
   }
 };
