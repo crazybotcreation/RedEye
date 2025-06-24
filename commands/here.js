@@ -11,6 +11,8 @@ export default {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels), // Only admins
 
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const userId = interaction.user.id;
     const guildId = interaction.guildId;
     const channelId = interaction.channelId;
@@ -30,9 +32,9 @@ export default {
 
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `✅ Bot will now post videos in <#${channelId}>`,
-      ephemeral: true
+      flags: 64
     });
   }
 };
