@@ -1,55 +1,35 @@
-// utils/gitUtils.js
+// src/utils/gitUtils.js
 import fs from 'fs';
 import { execSync } from 'child_process';
 
-const filePath = 'youtube-users.json';
-
-export async function syncSoulFromGithub() {
-  try {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) throw new Error('GITHUB_TOKEN not set.');
-
-    const repoURL = `https://crazybotcreation:${token}@github.com/crazybotcreation/RedEye.git`;
-
-    execSync(`git config --global user.email "bot@redeye.app"`);
-    execSync(`git config --global user.name "RedEye Bot"`);
-
-    execSync(`git remote remove origin || true`);
-    execSync(`git remote add origin ${repoURL}`);
-
-    const fileExists = fs.existsSync(filePath);
-    const fileContent = fileExists ? fs.readFileSync(filePath, 'utf-8') : '{}';
-
-    if (!fileExists || fileContent.trim() === '{}' || fileContent.trim() === '') {
-      console.log('🌩️ [Soul Sync] Missing or empty soul, pulling from GitHub...');
-      execSync('git pull origin main');
-      console.log('✅ [Soul Sync] Pulled successfully.');
-    } else {
-      console.log('🧠 [Soul Sync] Local soul already valid.');
-    }
-  } catch (err) {
-    console.error('❌ [Soul Sync] GitHub pull failed:', err.message);
-  }
-}
-
 export async function commitYoutubeUsersFile() {
+  const filePath = 'youtube-users.json';
+  const content = fs.readFileSync(filePath, 'utf-8');
+
+  console.log(`📁 Writing to: ${filePath}`);
+  console.log(`📝 Data to save: ${content}`);
+
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    // Step 1: Git config (only needs to run once per environment, safe to repeat)
+    execSync('git config --global user.email "bot@redeye.app"');
+    execSync('git config --global user.name "RedEye Bot"');
 
-    console.log(`📁 Writing to: ${filePath}`);
-    console.log(`📝 Data to save: ${content}`);
-
+    // Step 2: GitHub Token from .env
     const token = process.env.GITHUB_TOKEN;
     if (!token) throw new Error('GITHUB_TOKEN not found in environment variables.');
 
+    // Step 3: Repo URL with token access
     const repoURL = `https://crazybotcreation:${token}@github.com/crazybotcreation/RedEye.git`;
 
-    execSync(`git config --global user.email "bot@redeye.app"`);
-    execSync(`git config --global user.name "RedEye Bot"`);
-
-    execSync(`git remote remove origin || true`);
+    // Step 4: Reset and set remote
+    try {
+      execSync('git remote remove origin');
+    } catch (e) {
+      // ignore if already removed
+    }
     execSync(`git remote add origin ${repoURL}`);
 
+    // Step 5: Commit & push
     execSync('git add youtube-users.json');
     execSync('git commit -m "🔄 Update youtube-users.json" --allow-empty');
     execSync('git push origin main');
@@ -58,4 +38,4 @@ export async function commitYoutubeUsersFile() {
   } catch (err) {
     console.error('❌ Git push failed:', err.message);
   }
-}
+}       
