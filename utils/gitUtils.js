@@ -34,3 +34,4 @@ export async function commitYoutubeUsersFile() {
   } catch (err) {
     console.error('❌ Git push failed:', err.message);
   }
+}
