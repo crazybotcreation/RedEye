@@ -5,9 +5,7 @@ export default {
     try {
       console.log(`🔘 [verify_yt] Button clicked by ${interaction.user?.id}`);
 
-      // ✅ Safely acknowledge the interaction to prevent errors
-      await interaction.deferUpdate();
-
+      // ✅ Show the modal directly without deferring
       await interaction.showModal({
         custom_id: 'yt_verification_modal',
         title: 'YouTube Verification',
